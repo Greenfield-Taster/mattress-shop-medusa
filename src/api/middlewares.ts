@@ -1,0 +1,62 @@
+import { defineMiddlewares, validateAndTransformBody } from "@medusajs/framework/http"
+import { z } from "zod"
+
+/**
+ * Схема валідації для створення матраца
+ */
+const CreateMattressSchema = z.object({
+  // Основні дані продукту
+  title: z.string().min(1, "Назва обов'язкова"),
+  handle: z.string().optional(),
+  description: z.string().optional(),
+  images: z.array(z.string().url()).optional(),
+
+  // Атрибути матраца
+  height: z.number().min(3).max(50),
+  hardness: z.enum(["H1", "H2", "H3", "H4"]),
+  block_type: z.enum(["independent_spring", "bonnel_spring", "springless"]),
+  cover_type: z.enum(["removable", "non_removable"]),
+  max_weight: z.number().min(30).max(250),
+  fillers: z.array(z.string()).optional(),
+  
+  // Опис
+  description_main: z.string().optional(),
+  description_care: z.string().optional(),
+  specs: z.array(z.string()).optional(),
+  
+  // Прапорці
+  is_new: z.boolean().optional(),
+  discount_percent: z.number().min(0).max(100).optional(),
+
+  // Варіанти (розміри з цінами)
+  variants: z.array(z.object({
+    size: z.string(),
+    price: z.number().min(0),
+  })).min(1, "Додайте хоча б один розмір"),
+})
+
+/**
+ * Схема валідації для оновлення матраца
+ */
+const UpdateMattressSchema = CreateMattressSchema.partial()
+
+export default defineMiddlewares({
+  routes: [
+    // Валідація створення матраца
+    {
+      method: "POST",
+      matcher: "/admin/mattresses",
+      middlewares: [
+        validateAndTransformBody(CreateMattressSchema),
+      ],
+    },
+    // Валідація оновлення матраца
+    {
+      method: "POST",
+      matcher: "/admin/mattresses/:id",
+      middlewares: [
+        validateAndTransformBody(UpdateMattressSchema),
+      ],
+    },
+  ],
+})
