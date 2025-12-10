@@ -12,5 +12,11 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
-  }
+  },
+  modules: [
+    // Кастомний модуль для атрибутів матраців
+    {
+      resolve: "./src/modules/mattress",
+    },
+  ],
 })
