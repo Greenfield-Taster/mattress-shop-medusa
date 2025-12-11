@@ -8,9 +8,12 @@ import {
   Text,
   DropdownMenu,
   IconButton,
+  toast,
+  Toaster,
+  usePrompt,
 } from "@medusajs/ui"
-import { useQuery } from "@tanstack/react-query"
-import { Link, useNavigate } from "react-router-dom"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 import { PlusMini, EllipsisHorizontal, PencilSquare, Trash, Eye } from "@medusajs/icons"
 
 // Типи
@@ -81,6 +84,8 @@ const formatDate = (date: string): string => {
  */
 const MattressesPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const prompt = usePrompt()
 
   // Запит на отримання списку матраців
   const { data, isLoading, error, refetch } = useQuery({
@@ -99,18 +104,50 @@ const MattressesPage = () => {
     },
   })
 
+  // Мутація для видалення
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/admin/mattresses/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || "Failed to delete mattress")
+      }
+      
+      return response.json()
+    },
+    onSuccess: () => {
+      toast.success("Успіх", { description: "Матрац видалено" })
+      queryClient.invalidateQueries({ queryKey: ["mattresses"] })
+    },
+    onError: (error: Error) => {
+      toast.error("Помилка", { description: error.message })
+    },
+  })
+
   const mattresses: Mattress[] = data?.mattresses || []
 
-  // Видалення матраца (TODO: implement)
-  const handleDelete = async (id: string) => {
-    if (!confirm("Ви впевнені що хочете видалити цей матрац?")) return
-    
-    // TODO: Implement delete API
-    alert("Видалення поки не реалізовано")
+  // Видалення матраца
+  const handleDelete = async (id: string, title: string) => {
+    const confirmed = await prompt({
+      title: "Видалити матрац?",
+      description: `Ви впевнені що хочете видалити "${title}"? Цю дію неможливо скасувати.`,
+      confirmText: "Видалити",
+      cancelText: "Скасувати",
+    })
+
+    if (confirmed) {
+      deleteMutation.mutate(id)
+    }
   }
 
   return (
     <div className="flex flex-col gap-y-4">
+      <Toaster />
+      
       {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
@@ -278,15 +315,16 @@ const MattressesPage = () => {
                             Переглянути
                           </DropdownMenu.Item>
                           <DropdownMenu.Item 
-                            onClick={() => navigate(`/products/${mattress.id}`)}
+                            onClick={() => navigate(`/mattresses/${mattress.id}/edit`)}
                           >
                             <PencilSquare className="mr-2" />
                             Редагувати
                           </DropdownMenu.Item>
                           <DropdownMenu.Separator />
                           <DropdownMenu.Item 
-                            onClick={() => handleDelete(mattress.id)}
+                            onClick={() => handleDelete(mattress.id, mattress.title)}
                             className="text-red-500"
+                            disabled={deleteMutation.isPending}
                           >
                             <Trash className="mr-2" />
                             Видалити

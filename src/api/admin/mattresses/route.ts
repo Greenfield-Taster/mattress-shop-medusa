@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules, LinkDefinition } from "@medusajs/framework/utils"
+import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { MATTRESS_MODULE } from "../../../modules/mattress"
 import MattressModuleService from "../../../modules/mattress/service"
 
@@ -31,90 +32,60 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const link = req.scope.resolve(ContainerRegistrationKeys.LINK)
   const mattressService: MattressModuleService = req.scope.resolve(MATTRESS_MODULE)
-  const productService = req.scope.resolve(Modules.PRODUCT)
-  const pricingService = req.scope.resolve(Modules.PRICING)
   const salesChannelService = req.scope.resolve(Modules.SALES_CHANNEL)
 
   try {
-    // 1. Отримуємо shipping profile
-    const { data: shippingProfiles } = await query.graph({
-      entity: "shipping_profile",
-      fields: ["id"],
-      filters: { type: "default" },
-    })
-    
-    const shippingProfileId = shippingProfiles[0]?.id
-    if (!shippingProfileId) {
-      throw new Error("Default shipping profile not found. Run: npm run seed")
-    }
-
-    // 2. Отримуємо default sales channel
+    // 1. Отримуємо default sales channel
     const salesChannels = await salesChannelService.listSalesChannels({
       name: "Default Sales Channel",
     })
     const salesChannelId = salesChannels[0]?.id
 
-    // 3. Генеруємо handle якщо не вказано
+    // 2. Генеруємо handle якщо не вказано
     const productHandle = handle || title
       .toLowerCase()
       .replace(/[^a-zа-яіїєґ0-9\s-]/gi, "")
       .replace(/\s+/g, "-")
       .substring(0, 100)
 
-    // 4. Створюємо Product з варіантами
-    const product = await productService.createProducts({
-      title,
-      handle: productHandle,
-      description: description || description_main,
-      status: "published",
-      shipping_profile_id: shippingProfileId,
-      images: images?.map((url: string) => ({ url })) || [],
-      options: [
-        {
-          title: "Розмір",
-          values: variants.map((v: any) => v.size),
-        },
-      ],
-      variants: variants.map((v: any, index: number) => ({
-        title: v.size,
-        sku: `${productHandle}-${v.size}`.toUpperCase().replace(/[×х]/g, "X").replace(/\s+/g, "-"),
-        options: { "Розмір": v.size },
-        manage_inventory: false,
-      })),
-    })
-
-    // 5. Створюємо Price Sets для кожного варіанту
-    for (const variant of product.variants || []) {
-      const variantData = variants.find((v: any) => v.size === variant.title)
-      if (!variantData) continue
-
-      // Створюємо price set
-      const priceSet = await pricingService.createPriceSets({
-        prices: [
+    // 3. Використовуємо workflow для створення продукту з цінами
+    const { result } = await createProductsWorkflow(req.scope).run({
+      input: {
+        products: [
           {
-            amount: variantData.price,
-            currency_code: "uah",
+            title,
+            handle: productHandle,
+            description: description || description_main,
+            status: "published" as const,
+            images: images?.map((url: string) => ({ url })) || [],
+            options: [
+              {
+                title: "Розмір",
+                values: variants.map((v: any) => v.size),
+              },
+            ],
+            variants: variants.map((v: any) => ({
+              title: v.size,
+              sku: `${productHandle}-${v.size}`.toUpperCase().replace(/[×х]/g, "X").replace(/\s+/g, "-"),
+              options: { "Розмір": v.size },
+              manage_inventory: false,
+              prices: [
+                {
+                  amount: v.price,
+                  currency_code: "uah",
+                },
+              ],
+            })),
+            sales_channels: salesChannelId ? [{ id: salesChannelId }] : [],
           },
         ],
-      })
+      },
+    })
 
-      // Прив'язуємо price set до варіанту
-      await link.create({
-        [Modules.PRODUCT]: { product_variant_id: variant.id },
-        [Modules.PRICING]: { price_set_id: priceSet.id },
-      })
-    }
+    const product = result[0]
 
-    // 6. Прив'язуємо до sales channel
-    if (salesChannelId) {
-      await link.create({
-        [Modules.PRODUCT]: { product_id: product.id },
-        [Modules.SALES_CHANNEL]: { sales_channel_id: salesChannelId },
-      })
-    }
-
-    // 7. Створюємо MattressAttributes
-    const mattressAttributes = await mattressService.createMattressAttributess({
+    // 4. Створюємо MattressAttributes
+    const mattressAttributes = await mattressService.createMattressAttributes({
       height,
       hardness,
       block_type,
@@ -128,13 +99,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       discount_percent: discount_percent || 0,
     })
 
-    // 8. Створюємо link між Product та MattressAttributes
+    // 5. Створюємо link між Product та MattressAttributes
     await link.create({
       [Modules.PRODUCT]: { product_id: product.id },
       [MATTRESS_MODULE]: { mattress_attributes_id: mattressAttributes.id },
     })
 
-    // 9. Отримуємо повні дані продукту для відповіді
+    // 6. Отримуємо повні дані продукту для відповіді
     const { data: [fullProduct] } = await query.graph({
       entity: "product",
       fields: [
@@ -142,8 +113,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         "title",
         "handle",
         "status",
+        "thumbnail",
         "variants.*",
-        "variants.prices.*",
+        "variants.price_set.prices.*",
         "mattress_attributes.*",
       ],
       filters: { id: product.id },
@@ -187,7 +159,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "variants.id",
         "variants.title",
         "variants.sku",
-        "variants.prices.*",
+        "variants.price_set.prices.*",
         "images.url",
         "mattress_attributes.*",
       ],
@@ -200,9 +172,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // Фільтруємо тільки продукти з mattress_attributes
     const mattresses = products.filter((p: any) => p.mattress_attributes)
 
+    // Форматуємо ціни для зручності
+    const formattedMattresses = mattresses.map((m: any) => ({
+      ...m,
+      variants: m.variants?.map((v: any) => ({
+        ...v,
+        prices: v.price_set?.prices || [],
+      })),
+    }))
+
     res.json({ 
-      mattresses,
-      count: mattresses.length,
+      mattresses: formattedMattresses,
+      count: formattedMattresses.length,
     })
   } catch (error: any) {
     console.error("Error fetching mattresses:", error)

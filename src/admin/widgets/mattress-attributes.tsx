@@ -14,6 +14,7 @@ import {
 } from "@medusajs/ui"
 import { DetailWidgetProps, AdminProduct } from "@medusajs/framework/types"
 import { useState, useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 // Константи
 const HARDNESS_OPTIONS = [
@@ -63,10 +64,10 @@ interface MattressAttributes {
  * на сторінці деталей продукту
  */
 const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => {
+  const queryClient = useQueryClient()
   const [attributes, setAttributes] = useState<MattressAttributes | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
 
   // Форма редагування
   const [height, setHeight] = useState(20)
@@ -82,18 +83,16 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
   useEffect(() => {
     const fetchAttributes = async () => {
       try {
-        const response = await fetch(
-          `/admin/products/${data.id}?fields=+mattress_attributes.*`,
-          { credentials: "include" }
-        )
+        const response = await fetch(`/admin/mattresses/${data.id}`, {
+          credentials: "include",
+        })
         
         if (response.ok) {
           const result = await response.json()
-          const attrs = result.product?.mattress_attributes
+          const attrs = result.mattress?.mattress_attributes
           
           if (attrs) {
             setAttributes(attrs)
-            // Заповнюємо форму
             setHeight(attrs.height || 20)
             setHardness(attrs.hardness || "H3")
             setBlockType(attrs.block_type || "independent_spring")
@@ -114,6 +113,34 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     fetchAttributes()
   }, [data.id])
 
+  // Мутація для оновлення
+  const updateMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      const response = await fetch(`/admin/mattresses/${data.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || "Failed to update")
+      }
+      
+      return response.json()
+    },
+    onSuccess: (result) => {
+      toast.success("Збережено", { description: "Атрибути матраца оновлено" })
+      setAttributes(result.mattress?.mattress_attributes)
+      setIsEditing(false)
+      queryClient.invalidateQueries({ queryKey: ["mattresses"] })
+    },
+    onError: (error: Error) => {
+      toast.error("Помилка", { description: error.message })
+    },
+  })
+
   // Toggle filler
   const toggleFiller = (filler: string) => {
     setSelectedFillers(prev => 
@@ -124,39 +151,17 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
   }
 
   // Зберегти зміни
-  const handleSave = async () => {
-    setIsSaving(true)
-    
-    try {
-      // TODO: Implement update API
-      // const response = await fetch(`/admin/mattresses/${data.id}/attributes`, {
-      //   method: "PUT",
-      //   credentials: "include",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     height,
-      //     hardness,
-      //     block_type: blockType,
-      //     cover_type: coverType,
-      //     max_weight: maxWeight,
-      //     fillers: selectedFillers,
-      //     is_new: isNew,
-      //     discount_percent: discountPercent,
-      //   }),
-      // })
-
-      toast.success("Збережено", {
-        description: "Атрибути матраца оновлено",
-      })
-      
-      setIsEditing(false)
-    } catch (error: any) {
-      toast.error("Помилка", {
-        description: error.message,
-      })
-    } finally {
-      setIsSaving(false)
-    }
+  const handleSave = () => {
+    updateMutation.mutate({
+      height,
+      hardness,
+      block_type: blockType,
+      cover_type: coverType,
+      max_weight: maxWeight,
+      fillers: selectedFillers,
+      is_new: isNew,
+      discount_percent: discountPercent,
+    })
   }
 
   // Скасувати редагування
@@ -174,7 +179,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     setIsEditing(false)
   }
 
-  // Якщо завантажується
   if (isLoading) {
     return (
       <Container className="divide-y p-0">
@@ -185,7 +189,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     )
   }
 
-  // Якщо немає атрибутів матраца
   if (!attributes) {
     return (
       <Container className="divide-y p-0">
@@ -214,8 +217,10 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
           <Heading level="h2">Атрибути матраца</Heading>
-          {isNew && <Badge color="orange">NEW</Badge>}
-          {discountPercent > 0 && <Badge color="red">-{discountPercent}%</Badge>}
+          {attributes.is_new && <Badge color="orange">NEW</Badge>}
+          {attributes.discount_percent > 0 && (
+            <Badge color="red">-{attributes.discount_percent}%</Badge>
+          )}
         </div>
         {!isEditing ? (
           <Button variant="secondary" size="small" onClick={() => setIsEditing(true)}>
@@ -223,11 +228,21 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button variant="secondary" size="small" onClick={handleCancel} disabled={isSaving}>
+            <Button 
+              variant="secondary" 
+              size="small" 
+              onClick={handleCancel} 
+              disabled={updateMutation.isPending}
+            >
               Скасувати
             </Button>
-            <Button variant="primary" size="small" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Збереження..." : "Зберегти"}
+            <Button 
+              variant="primary" 
+              size="small" 
+              onClick={handleSave} 
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "..." : "Зберегти"}
             </Button>
           </div>
         )}
@@ -389,7 +404,7 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
   )
 }
 
-// Конфігурація widget - показуємо на сторінці деталей продукту
+// Конфігурація widget
 export const config = defineWidgetConfig({
   zone: "product.details.after",
 })
