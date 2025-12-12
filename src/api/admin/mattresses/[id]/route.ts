@@ -171,7 +171,16 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       if (discount_percent !== undefined) updateData.discount_percent = discount_percent
 
       if (Object.keys(updateData).length > 0) {
-        await mattressService.updateMattressAttributes(mattressAttrId, updateData)
+        console.log("Updating mattress attributes with ID:", mattressAttrId)
+        console.log("Update data:", updateData)
+        
+        // MedusaService update method: pass object with id + data
+        const updated = await mattressService.updateMattressAttributes({
+          id: mattressAttrId,
+          ...updateData
+        })
+        
+        console.log("Update result:", updated)
       }
     } else {
       console.log("No mattress attributes found for product:", id)
@@ -244,7 +253,7 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
         [MATTRESS_MODULE]: { mattress_attributes_id: mattressAttrId },
       })
 
-      await mattressService.deleteMattressAttributes(mattressAttrId)
+      await mattressService.deleteMattressAttributes({ id: mattressAttrId })
     }
 
     // 3. Видаляємо Product

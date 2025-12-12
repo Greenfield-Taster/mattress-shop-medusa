@@ -13,7 +13,7 @@ import {
   Toaster,
 } from "@medusajs/ui"
 import { useNavigate, useParams } from "react-router-dom"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { ArrowLeft } from "@medusajs/icons"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -65,6 +65,9 @@ const EditMattressPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  // Прапорець чи форма ініціалізована
+  const [isInitialized, setIsInitialized] = useState(false)
+
   // Стан форми - основні
   const [title, setTitle] = useState("")
   const [status, setStatus] = useState("published")
@@ -101,9 +104,9 @@ const EditMattressPage = () => {
     enabled: !!id,
   })
 
-  // Заповнення форми даними
+  // Заповнення форми даними (один раз)
   useEffect(() => {
-    if (data?.mattress) {
+    if (data?.mattress && !isInitialized) {
       const m = data.mattress
       setTitle(m.title || "")
       setStatus(m.status || "published")
@@ -131,8 +134,10 @@ const EditMattressPage = () => {
         }))
         setVariantPrices(prices)
       }
+
+      setIsInitialized(true)
     }
-  }, [data])
+  }, [data, isInitialized])
 
   // Мутація для оновлення
   const updateMutation = useMutation({
@@ -154,7 +159,10 @@ const EditMattressPage = () => {
     onSuccess: () => {
       toast.success("Успіх", { description: "Матрац оновлено" })
       queryClient.invalidateQueries({ queryKey: ["mattresses"] })
-      queryClient.invalidateQueries({ queryKey: ["mattress", id] })
+      // Redirect to list after successful save
+      setTimeout(() => {
+        navigate("/mattresses")
+      }, 500)
     },
     onError: (error: Error) => {
       toast.error("Помилка", { description: error.message })
@@ -199,7 +207,8 @@ const EditMattressPage = () => {
     })
   }
 
-  if (isLoading) {
+  // Loading state
+  if (isLoading || !isInitialized) {
     return (
       <Container className="p-6">
         <div className="animate-pulse">Завантаження...</div>
@@ -219,8 +228,9 @@ const EditMattressPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-y-4 pb-8">
+    <>
       <Toaster />
+      <div className="flex flex-col gap-y-4 pb-8">
       
       {/* Header */}
       <Container className="divide-y p-0">
@@ -266,7 +276,7 @@ const EditMattressPage = () => {
               <Label>Статус</Label>
               <Select value={status} onValueChange={setStatus}>
                 <Select.Trigger>
-                  <Select.Value />
+                  <Select.Value placeholder="Виберіть статус" />
                 </Select.Trigger>
                 <Select.Content>
                   {STATUS_OPTIONS.map(opt => (
@@ -320,7 +330,7 @@ const EditMattressPage = () => {
               <Label>Жорсткість</Label>
               <Select value={hardness} onValueChange={setHardness}>
                 <Select.Trigger>
-                  <Select.Value />
+                  <Select.Value placeholder="Виберіть" />
                 </Select.Trigger>
                 <Select.Content>
                   {HARDNESS_OPTIONS.map(opt => (
@@ -336,7 +346,7 @@ const EditMattressPage = () => {
               <Label>Тип блоку</Label>
               <Select value={blockType} onValueChange={setBlockType}>
                 <Select.Trigger>
-                  <Select.Value />
+                  <Select.Value placeholder="Виберіть" />
                 </Select.Trigger>
                 <Select.Content>
                   {BLOCK_TYPE_OPTIONS.map(opt => (
@@ -352,7 +362,7 @@ const EditMattressPage = () => {
               <Label>Чохол</Label>
               <Select value={coverType} onValueChange={setCoverType}>
                 <Select.Trigger>
-                  <Select.Value />
+                  <Select.Value placeholder="Виберіть" />
                 </Select.Trigger>
                 <Select.Content>
                   {COVER_TYPE_OPTIONS.map(opt => (
@@ -471,7 +481,8 @@ const EditMattressPage = () => {
           </Button>
         </div>
       </Container>
-    </div>
+      </div>
+    </>
   )
 }
 
