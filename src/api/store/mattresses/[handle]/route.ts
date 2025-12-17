@@ -42,33 +42,35 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
+    const attrs = product.mattress_attributes as any
+    const fillersList: string[] = Array.isArray(attrs.fillers) ? attrs.fillers : []
+
     // Форматуємо відповідь
     const mattress = {
       id: product.id,
       title: product.title,
       handle: product.handle,
-      description: product.description,
       thumbnail: product.thumbnail,
       images: product.images?.map((img: any) => img.url) || [],
       
       // Атрибути матраца
-      height: product.mattress_attributes.height,
-      hardness: product.mattress_attributes.hardness,
-      blockType: formatBlockType(product.mattress_attributes.block_type),
-      blockTypeRaw: product.mattress_attributes.block_type,
-      coverType: formatCoverType(product.mattress_attributes.cover_type),
-      coverTypeRaw: product.mattress_attributes.cover_type,
-      maxWeight: product.mattress_attributes.max_weight,
-      fillers: formatFillers(product.mattress_attributes.fillers || []),
-      fillersRaw: product.mattress_attributes.fillers || [],
-      isNew: product.mattress_attributes.is_new,
-      discountPercent: product.mattress_attributes.discount_percent,
+      height: attrs.height,
+      hardness: attrs.hardness,
+      blockType: formatBlockType(attrs.block_type),
+      blockTypeRaw: attrs.block_type,
+      coverType: formatCoverType(attrs.cover_type),
+      coverTypeRaw: attrs.cover_type,
+      maxWeight: attrs.max_weight,
+      fillers: formatFillers(fillersList),
+      fillersRaw: fillersList,
+      isNew: attrs.is_new,
+      discountPercent: attrs.discount_percent,
       
       // Опис
       description: {
-        main: product.mattress_attributes.description_main,
-        care: product.mattress_attributes.description_care,
-        specs: product.mattress_attributes.specs || [],
+        main: attrs.description_main,
+        care: attrs.description_care,
+        specs: attrs.specs || [],
       },
 
       // Варіанти (розміри з цінами) - згруповані по категоріях
@@ -82,7 +84,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         price: v.prices?.[0]?.amount || 0,
         oldPrice: calculateOldPrice(
           v.prices?.[0]?.amount || 0,
-          product.mattress_attributes.discount_percent
+          attrs.discount_percent
         ),
         currency: v.prices?.[0]?.currency_code || "uah",
       })) || [],
@@ -91,7 +93,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       price: getMinPrice(product.variants),
       oldPrice: calculateOldPrice(
         getMinPrice(product.variants),
-        product.mattress_attributes.discount_percent
+        attrs.discount_percent
       ),
     }
 
@@ -170,11 +172,11 @@ function getMinPrice(variants: any[]): number {
   if (!variants?.length) return 0
   const prices = variants
     .map(v => v.prices?.[0]?.amount)
-    .filter(p => p > 0)
+    .filter((p): p is number => p != null && p > 0)
   return prices.length ? Math.min(...prices) : 0
 }
 
-function calculateOldPrice(price: number, discountPercent: number): number | null {
+function calculateOldPrice(price: number, discountPercent: number | null | undefined): number | null {
   if (!discountPercent || discountPercent <= 0 || !price) return null
   return Math.round(price / (1 - discountPercent / 100))
 }
