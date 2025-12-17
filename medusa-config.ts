@@ -11,12 +11,31 @@ module.exports = defineConfig({
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
-    }
+    },
   },
   modules: [
     // Кастомний модуль для атрибутів матраців
     {
       resolve: "./src/modules/mattress",
+    },
+    // Local File Provider - для development
+    // ВАЖЛИВО: MedusaJS обслуговує тільки /static директорію через Express.static
+    {
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/file-local",
+            id: "local",
+            options: {
+              // Директорія для збереження файлів (static - обслуговується MedusaJS)
+              upload_dir: "static",
+              // URL бекенду для формування URL файлів (з /static на кінці)
+              backend_url: process.env.BACKEND_URL || "http://localhost:9000/static",
+            },
+          },
+        ],
+      },
     },
   ],
 })
