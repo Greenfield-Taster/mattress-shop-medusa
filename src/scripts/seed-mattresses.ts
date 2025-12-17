@@ -1,5 +1,6 @@
 import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { MATTRESS_MODULE } from "../modules/mattress"
 import MattressModuleService from "../modules/mattress/service"
 
@@ -10,27 +11,11 @@ import MattressModuleService from "../modules/mattress/service"
  */
 export default async function seedMattresses({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-  const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const link = container.resolve(ContainerRegistrationKeys.LINK)
-  const productService = container.resolve(Modules.PRODUCT)
-  const pricingService = container.resolve(Modules.PRICING)
-  const salesChannelService = container.resolve(Modules.SALES_CHANNEL)
+  const salesChannelService = container.resolve(Modules.SALES_CHANNEL) as any
   const mattressService: MattressModuleService = container.resolve(MATTRESS_MODULE)
 
   logger.info("Starting mattress seed...")
-
-  // Отримуємо shipping profile
-  const { data: shippingProfiles } = await query.graph({
-    entity: "shipping_profile",
-    fields: ["id"],
-    filters: { type: "default" },
-  })
-  const shippingProfileId = shippingProfiles[0]?.id
-
-  if (!shippingProfileId) {
-    logger.error("No shipping profile found. Run 'npm run seed' first!")
-    return
-  }
 
   // Отримуємо sales channel
   const salesChannels = await salesChannelService.listSalesChannels({
@@ -119,54 +104,43 @@ export default async function seedMattresses({ container }: ExecArgs) {
     logger.info(`Creating mattress: ${data.title}`)
 
     try {
-      // 1. Створюємо Product
-      const product = await productService.createProducts({
-        title: data.title,
-        handle: data.handle,
-        description: data.description_main,
-        status: "published",
-        shipping_profile_id: shippingProfileId,
-        options: [
-          {
-            title: "Розмір",
-            values: sizes,
-          },
-        ],
-        variants: sizes.map((size) => ({
-          title: size,
-          sku: `${data.handle}-${size}`.toUpperCase().replace(/[×х]/g, "X"),
-          options: { "Розмір": size },
-          manage_inventory: false,
-        })),
-      })
-
-      // 2. Створюємо ціни для варіантів
-      for (const variant of product.variants || []) {
-        const priceSet = await pricingService.createPriceSets({
-          prices: [
+      // 1. Створюємо Product через workflow (з цінами)
+      const { result } = await createProductsWorkflow(container).run({
+        input: {
+          products: [
             {
-              amount: data.basePrice,
-              currency_code: "uah",
+              title: data.title,
+              handle: data.handle,
+              description: data.description_main,
+              status: "published" as const,
+              options: [
+                {
+                  title: "Розмір",
+                  values: sizes,
+                },
+              ],
+              variants: sizes.map((size) => ({
+                title: size,
+                sku: `${data.handle}-${size}`.toUpperCase().replace(/[×х]/g, "X"),
+                options: { "Розмір": size },
+                manage_inventory: false,
+                prices: [
+                  {
+                    amount: data.basePrice,
+                    currency_code: "uah",
+                  },
+                ],
+              })),
+              sales_channels: salesChannelId ? [{ id: salesChannelId }] : [],
             },
           ],
-        })
+        },
+      })
 
-        await link.create({
-          [Modules.PRODUCT]: { product_variant_id: variant.id },
-          [Modules.PRICING]: { price_set_id: priceSet.id },
-        })
-      }
+      const product = result[0]
 
-      // 3. Прив'язуємо до sales channel
-      if (salesChannelId) {
-        await link.create({
-          [Modules.PRODUCT]: { product_id: product.id },
-          [Modules.SALES_CHANNEL]: { sales_channel_id: salesChannelId },
-        })
-      }
-
-      // 4. Створюємо MattressAttributes
-      const mattressAttributes = await mattressService.createMattressAttributess({
+      // 2. Створюємо MattressAttributes
+      const mattressAttributes = await (mattressService as any).createMattressAttributes({
         height: data.height,
         hardness: data.hardness,
         block_type: data.block_type,
@@ -180,7 +154,7 @@ export default async function seedMattresses({ container }: ExecArgs) {
         discount_percent: data.discount_percent,
       })
 
-      // 5. Link Product ↔ MattressAttributes
+      // 3. Link Product ↔ MattressAttributes
       await link.create({
         [Modules.PRODUCT]: { product_id: product.id },
         [MATTRESS_MODULE]: { mattress_attributes_id: mattressAttributes.id },

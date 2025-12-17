@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys, Modules, LinkDefinition } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { MATTRESS_MODULE } from "../../../modules/mattress"
 import MattressModuleService from "../../../modules/mattress/service"
@@ -32,7 +32,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const link = req.scope.resolve(ContainerRegistrationKeys.LINK)
   const mattressService: MattressModuleService = req.scope.resolve(MATTRESS_MODULE)
-  const salesChannelService = req.scope.resolve(Modules.SALES_CHANNEL)
+  const salesChannelService = req.scope.resolve(Modules.SALES_CHANNEL) as any
 
   try {
     // 1. Отримуємо default sales channel
@@ -85,7 +85,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const product = result[0]
 
     // 4. Створюємо MattressAttributes
-    const mattressAttributes = await mattressService.createMattressAttributes({
+    const mattressAttributes = await (mattressService as any).createMattressAttributes({
       height,
       hardness,
       block_type,
