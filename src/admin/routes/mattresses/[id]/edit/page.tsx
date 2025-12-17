@@ -13,8 +13,8 @@ import {
   Toaster,
 } from "@medusajs/ui"
 import { useNavigate, useParams } from "react-router-dom"
-import { useState, useEffect, useMemo } from "react"
-import { ArrowLeft } from "@medusajs/icons"
+import { useState, useEffect, useRef } from "react"
+import { ArrowLeft, Plus, Trash } from "@medusajs/icons"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 // ===== КОНСТАНТИ =====
@@ -58,12 +58,18 @@ interface VariantPrice {
   price: number
 }
 
+interface ProductImage {
+  id?: string
+  url: string
+}
+
 // ===== КОМПОНЕНТ =====
 
 const EditMattressPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Прапорець чи форма ініціалізована
   const [isInitialized, setIsInitialized] = useState(false)
@@ -71,6 +77,11 @@ const EditMattressPage = () => {
   // Стан форми - основні
   const [title, setTitle] = useState("")
   const [status, setStatus] = useState("published")
+  
+  // Стан форми - зображення
+  const [images, setImages] = useState<ProductImage[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   
   // Стан форми - атрибути
   const [height, setHeight] = useState(20)
@@ -111,6 +122,13 @@ const EditMattressPage = () => {
       setTitle(m.title || "")
       setStatus(m.status || "published")
       
+      // Зображення
+      if (m.images && m.images.length > 0) {
+        setImages(m.images.map((img: any) => ({ id: img.id, url: img.url })))
+      } else if (m.thumbnail) {
+        setImages([{ url: m.thumbnail }])
+      }
+      
       // Атрибути матраца
       if (m.mattress_attributes) {
         setHeight(m.mattress_attributes.height || 20)
@@ -138,6 +156,94 @@ const EditMattressPage = () => {
       setIsInitialized(true)
     }
   }, [data, isInitialized])
+
+  // === Завантаження зображень ===
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return
+
+    // Валідація
+    const imageFiles = files.filter(f => f.type.startsWith("image/"))
+    if (imageFiles.length === 0) {
+      toast.error("Помилка", { description: "Дозволені тільки зображення" })
+      return
+    }
+
+    if (images.length + imageFiles.length > 10) {
+      toast.error("Помилка", { description: "Максимум 10 зображень" })
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const formData = new FormData()
+      imageFiles.forEach(file => formData.append("files", file))
+
+      const response = await fetch("/admin/mattresses/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || "Upload failed")
+      }
+
+      const data = await response.json()
+      
+      // Додаємо нові URL до списку
+      const newImages = data.urls.map((url: string) => ({ url }))
+      setImages(prev => [...prev, ...newImages])
+      
+      toast.success("Успіх", { 
+        description: `Завантажено ${data.urls.length} зображень` 
+      })
+    } catch (error: any) {
+      toast.error("Помилка", { description: error.message })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  // File input change
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    uploadFiles(files)
+    e.target.value = "" // Reset input
+  }
+
+  // Drag & drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    uploadFiles(files)
+  }
+
+  // Видалення зображення
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+  }
 
   // Мутація для оновлення
   const updateMutation = useMutation({
@@ -190,6 +296,7 @@ const EditMattressPage = () => {
     updateMutation.mutate({
       title,
       status,
+      images: images.map(img => img.url),
       height,
       hardness,
       block_type: blockType,
@@ -256,6 +363,92 @@ const EditMattressPage = () => {
               {updateMutation.isPending ? "Збереження..." : "Зберегти"}
             </Button>
           </div>
+        </div>
+      </Container>
+
+      {/* Зображення */}
+      <Container className="divide-y p-0">
+        <div className="px-6 py-4">
+          <Heading level="h2" className="mb-4">Зображення</Heading>
+          
+          {/* Сітка зображень */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
+            {images.map((img, index) => (
+              <div 
+                key={index} 
+                className="relative aspect-square rounded-lg overflow-hidden border group"
+              >
+                <img
+                  src={img.url}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext fill='%239ca3af' x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='12'%3EПомилка%3C/text%3E%3C/svg%3E"
+                  }}
+                />
+                
+                {/* Позначка головного зображення */}
+                {index === 0 && (
+                  <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">
+                    Головне
+                  </div>
+                )}
+                
+                {/* Кнопка видалення */}
+                <button
+                  onClick={() => removeImage(index)}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            
+            {/* Зона завантаження */}
+            {images.length < 10 && (
+              <div
+                className={`
+                  aspect-square rounded-lg border-2 border-dashed 
+                  flex flex-col items-center justify-center cursor-pointer
+                  transition-colors
+                  ${isDragging 
+                    ? "border-blue-500 bg-blue-50" 
+                    : "border-gray-300 hover:border-gray-400"
+                  }
+                  ${isUploading ? "opacity-50 pointer-events-none" : ""}
+                `}
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                {isUploading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                ) : (
+                  <>
+                    <Plus className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-xs text-gray-500 text-center px-2">
+                      Перетягніть або натисніть
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
+          <Text className="text-gray-500 text-sm">
+            Перше зображення буде використано як головне. Максимум 10 зображень.
+          </Text>
         </div>
       </Container>
 
