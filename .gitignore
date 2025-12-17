@@ -24,3 +24,7 @@ build
 !.yarn/versions
 
 .medusa
+
+static/*.png
+static/*.jpg
+nul
