@@ -59,6 +59,9 @@ const UpdateMattressSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   status: z.enum(["draft", "published"]).optional(),
+  // Зображення - масив URL
+  images: z.array(z.string()).optional(),
+  // Атрибути матраца
   height: z.number().min(3).max(50).optional(),
   hardness: z.enum(["H1", "H2", "H3", "H4"]).optional(),
   block_type: z.enum(["independent_spring", "bonnel_spring", "springless"]).optional(),
