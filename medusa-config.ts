@@ -18,6 +18,10 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/mattress",
     },
+    // Модуль промокодів
+    {
+      resolve: "./src/modules/promo-code",
+    },
     // Local File Provider - для development
     // ВАЖЛИВО: MedusaJS обслуговує тільки /static директорію через Express.static
     {
