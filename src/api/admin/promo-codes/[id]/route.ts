@@ -100,7 +100,8 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     if (expires_at !== undefined) updateData.expires_at = expires_at ? new Date(expires_at) : null
     if (is_active !== undefined) updateData.is_active = is_active
 
-    await promoCodeService.updatePromoCodes({ id }, updateData)
+    // MedusaJS v2: updatePromoCodes приймає масив об'єктів з id та полями для оновлення
+    await promoCodeService.updatePromoCodes([{ id, ...updateData }])
 
     const updatedPromoCode = await promoCodeService.retrievePromoCode(id)
 

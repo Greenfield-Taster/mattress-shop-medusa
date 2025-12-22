@@ -89,10 +89,8 @@ class PromoCodeModuleService extends MedusaService({
    */
   async incrementUsage(id: string) {
     const promoCode = await this.retrievePromoCode(id)
-    await this.updatePromoCodes(
-      { id },
-      { current_uses: promoCode.current_uses + 1 }
-    )
+    // MedusaJS v2: updatePromoCodes приймає масив об'єктів з id та полями для оновлення
+    await this.updatePromoCodes([{ id, current_uses: promoCode.current_uses + 1 }])
   }
 }
 
