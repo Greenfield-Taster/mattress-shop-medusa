@@ -13,6 +13,7 @@ import {
   Toaster,
 } from "@medusajs/ui"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { useState, useRef, useCallback } from "react"
 import { ArrowLeft, Photo, XMark } from "@medusajs/icons"
 
@@ -90,6 +91,7 @@ interface SizePrice {
 
 const CreateMattressPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -330,6 +332,7 @@ const CreateMattressPage = () => {
       }
 
       toast.success("Успіх", { description: "Матрац успішно створено" })
+      queryClient.invalidateQueries({ queryKey: ["mattresses"] })
       setTimeout(() => navigate("/mattresses"), 500)
 
     } catch (err: any) {

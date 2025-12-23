@@ -115,20 +115,27 @@ const EditMattressPage = () => {
     enabled: !!id,
   })
 
-  // Заповнення форми даними (один раз)
+  // Скидаємо стан ініціалізації при зміні id матраца
+  useEffect(() => {
+    setIsInitialized(false)
+  }, [id])
+
+  // Заповнення форми даними (при зміні data або після скидання isInitialized)
   useEffect(() => {
     if (data?.mattress && !isInitialized) {
       const m = data.mattress
       setTitle(m.title || "")
       setStatus(m.status || "published")
-      
+
       // Зображення
       if (m.images && m.images.length > 0) {
         setImages(m.images.map((img: any) => ({ id: img.id, url: img.url })))
       } else if (m.thumbnail) {
         setImages([{ url: m.thumbnail }])
+      } else {
+        setImages([])
       }
-      
+
       // Атрибути матраца
       if (m.mattress_attributes) {
         setHeight(m.mattress_attributes.height || 20)
@@ -141,6 +148,18 @@ const EditMattressPage = () => {
         setDiscountPercent(m.mattress_attributes.discount_percent || 0)
         setDescriptionMain(m.mattress_attributes.description_main || "")
         setDescriptionCare(m.mattress_attributes.description_care || "")
+      } else {
+        // Скидаємо до дефолтних значень якщо атрибутів немає
+        setHeight(20)
+        setHardness("H3")
+        setBlockType("independent_spring")
+        setCoverType("removable")
+        setMaxWeight(120)
+        setSelectedFillers([])
+        setIsNew(false)
+        setDiscountPercent(0)
+        setDescriptionMain("")
+        setDescriptionCare("")
       }
 
       // Ціни варіантів
@@ -151,6 +170,8 @@ const EditMattressPage = () => {
           price: v.prices?.find((p: any) => p.currency_code === "uah")?.amount || 0,
         }))
         setVariantPrices(prices)
+      } else {
+        setVariantPrices([])
       }
 
       setIsInitialized(true)
@@ -264,7 +285,9 @@ const EditMattressPage = () => {
     },
     onSuccess: () => {
       toast.success("Успіх", { description: "Матрац оновлено" })
+      // Інвалідуємо кеш списку та конкретного матраца
       queryClient.invalidateQueries({ queryKey: ["mattresses"] })
+      queryClient.invalidateQueries({ queryKey: ["mattress", id] })
       // Redirect to list after successful save
       setTimeout(() => {
         navigate("/mattresses")
