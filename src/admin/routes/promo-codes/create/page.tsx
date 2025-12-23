@@ -11,7 +11,7 @@ import {
   toast,
   Toaster,
 } from "@medusajs/ui"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { ArrowLeft } from "@medusajs/icons"
@@ -22,6 +22,7 @@ import { ArrowLeft } from "@medusajs/icons"
  */
 const CreatePromoCodePage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   // Стан форми
   const [code, setCode] = useState("")
@@ -53,6 +54,7 @@ const CreatePromoCodePage = () => {
     },
     onSuccess: () => {
       toast.success("Успіх", { description: "Промокод створено" })
+      queryClient.invalidateQueries({ queryKey: ["promo-codes"] })
       navigate("/promo-codes")
     },
     onError: (error: Error) => {

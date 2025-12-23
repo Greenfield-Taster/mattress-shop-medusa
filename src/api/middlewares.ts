@@ -85,7 +85,7 @@ const UpdateMattressSchema = z.object({
  */
 const CreatePromoCodeSchema = z.object({
   code: z.string().min(1, "Код промокоду обов'язковий").transform(val => val.toUpperCase().trim()),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   discount_type: z.enum(["percentage", "fixed"], {
     errorMap: () => ({ message: "Тип знижки має бути 'percentage' або 'fixed'" })
   }),
