@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { MATTRESS_MODULE } from "../../../modules/mattress"
 import MattressModuleService from "../../../modules/mattress/service"
+import type { Logger } from "@medusajs/framework/types"
 
 /**
  * POST /admin/mattresses
@@ -85,7 +86,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const product = result[0]
 
     // 4. Створюємо MattressAttributes
-    const mattressAttributes = await (mattressService as any).createMattressAttributes({
+    const mattressAttributes = await mattressService.createMattressAttributes({
       height,
       hardness,
       block_type,
@@ -125,11 +126,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       product: fullProduct,
       message: "Матрац успішно створено",
     })
-  } catch (error: any) {
-    console.error("Error creating mattress:", error)
+  } catch (error: unknown) {
+    const logger: Logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const errorStack = error instanceof Error ? error.stack : undefined
+    logger.error(`Error creating mattress: ${errorMessage}`)
     res.status(400).json({
-      message: error.message,
-      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      message: errorMessage,
+      error: process.env.NODE_ENV === "development" ? errorStack : undefined,
     })
   }
 }
@@ -185,10 +189,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       mattresses: formattedMattresses,
       count: formattedMattresses.length,
     })
-  } catch (error: any) {
-    console.error("Error fetching mattresses:", error)
+  } catch (error: unknown) {
+    const logger: Logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    logger.error(`Error fetching mattresses: ${errorMessage}`)
     res.status(400).json({
-      message: error.message,
+      message: errorMessage,
     })
   }
 }

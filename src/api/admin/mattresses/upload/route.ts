@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import type { Logger } from "@medusajs/framework/types"
 
 /**
  * POST /admin/mattresses/upload
@@ -27,7 +28,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const [result] = await fileModuleService.createFiles([{
           filename: file.originalname,
           mimeType: file.mimetype,
-          content: file.buffer.toString("binary"),
+          content: file.buffer.toString("base64"),
           access: "public",
         }])
 
@@ -45,10 +46,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       urls,
       message: `Успішно завантажено ${urls.length} файл(ів)`,
     })
-  } catch (error: any) {
-    console.error("Upload error:", error.message)
+  } catch (error: unknown) {
+    const logger: Logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    logger.error(`Upload error: ${errorMessage}`)
     res.status(400).json({
-      message: error.message
+      message: errorMessage
     })
   }
 }
