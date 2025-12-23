@@ -203,7 +203,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
 
       if (Object.keys(updateData).length > 0) {
         logger.debug(`Updating mattress attributes ${mattressAttrId}`)
-        await mattressService.updateMattressAttributes({
+        await mattressService.updateMattressAttr({
           id: mattressAttrId,
           ...updateData,
         })
@@ -280,7 +280,7 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
         [MATTRESS_MODULE]: { mattress_attributes_id: mattressAttrId },
       })
 
-      await mattressService.deleteMattressAttributes(mattressAttrId)
+      await mattressService.deleteMattressAttr(mattressAttrId)
     }
 
     await productService.deleteProducts([id])

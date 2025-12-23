@@ -86,7 +86,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const product = result[0]
 
     // 4. Створюємо MattressAttributes
-    const mattressAttributes = await mattressService.createMattressAttributes({
+    const mattressAttributes = await mattressService.createMattressAttr({
       height,
       hardness,
       block_type,
