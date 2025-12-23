@@ -8,6 +8,7 @@ import {
   getMinPrice,
   sortMattresses,
   formatProductForStore,
+  normalizeSize,
   type ProductWithAttributes,
 } from "../../../utils/mattress-formatters"
 
@@ -106,10 +107,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Фільтр по розмірам (перевіряємо варіанти)
+    // Нормалізуємо розміри для порівняння (різні варіанти символу "х")
     if (sizesArr.length > 0) {
+      const normalizedFilterSizes = sizesArr.map(normalizeSize)
       mattresses = mattresses.filter((m) => {
-        const productSizes = m.variants?.map((v) => v.title) || []
-        return sizesArr.some((size) => productSizes.includes(size))
+        const productSizes = m.variants?.map((v) => normalizeSize(v.title)) || []
+        return normalizedFilterSizes.some((size) => productSizes.includes(size))
       })
     }
 

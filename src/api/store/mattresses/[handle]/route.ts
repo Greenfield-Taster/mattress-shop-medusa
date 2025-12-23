@@ -7,6 +7,7 @@ import {
   getMinPrice,
   calculateOldPrice,
   groupVariantsByCategory,
+  normalizeSize,
   type ProductWithAttributes,
 } from "../../../../utils/mattress-formatters"
 
@@ -95,7 +96,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           const variantPrice = priceArray?.[0]?.amount || 0
           return {
             id: v.id,
-            size: v.title,
+            size: normalizeSize(v.title), // Нормалізуємо для сумісності з фронтендом
             sku: v.sku,
             price: variantPrice,
             oldPrice: calculateOldPrice(variantPrice, discountPercent),

@@ -66,7 +66,7 @@ export const COVER_TYPE_LABELS: Record<string, string> = {
 export const FILLER_LABELS: Record<string, string> = {
   latex: "Латекс",
   memory_foam: "Піна з пам'яттю",
-  coconut: "Кокосове волокно",
+  coconut: "Кокосове полотно",
   latex_foam: "Латексована піна",
   felt: "Войлок",
   polyurethane: "Пінополіуретан",
@@ -88,6 +88,19 @@ export const SIZE_CATEGORIES: Record<string, string[]> = {
   "Двоспальний": ["140×190", "140×200", "160×190", "160×200"],
   "King Size": ["180×190", "180×200"],
   "King Size XL": ["200×200"],
+}
+
+// ===== НОРМАЛІЗАЦІЯ =====
+
+/**
+ * Нормалізує розмір матраца для порівняння
+ * Замінює різні варіанти символу "x" на кирилічний "х"
+ * Фронтенд використовує "160х200" (кирилиця)
+ */
+export function normalizeSize(size: string): string {
+  if (!size) return ""
+  // Замінюємо Unicode × (U+00D7) та латинський x на кирилічний х
+  return size.replace(/[×xXхХ]/g, "х")
 }
 
 // ===== ФОРМАТУВАННЯ =====
@@ -202,13 +215,15 @@ export function groupVariantsByCategory(variants: ProductVariant[] | undefined):
   }>> = {}
 
   for (const [category, sizes] of Object.entries(SIZE_CATEGORIES)) {
+    // Нормалізуємо розміри категорій для порівняння
+    const normalizedCategorySizes = sizes.map(normalizeSize)
     const categoryVariants = variants
-      .filter(v => sizes.includes(v.title))
+      .filter(v => normalizedCategorySizes.includes(normalizeSize(v.title)))
       .map(v => {
         const priceArray = v.prices || v.price_set?.prices
         return {
           id: v.id,
-          size: v.title,
+          size: normalizeSize(v.title), // Нормалізуємо для фронтенду
           price: priceArray?.[0]?.amount || 0,
           currency: priceArray?.[0]?.currency_code || "uah",
         }
@@ -314,7 +329,7 @@ export function formatProductForStore(product: ProductWithAttributes): object {
       const variantPrice = priceArray?.[0]?.amount || 0
       return {
         id: v.id,
-        size: v.title,
+        size: normalizeSize(v.title), // Нормалізуємо для сумісності з фронтендом
         sku: v.sku,
         price: variantPrice,
         oldPrice: calculateOldPrice(variantPrice, discountPercent),
@@ -323,6 +338,6 @@ export function formatProductForStore(product: ProductWithAttributes): object {
     }) || [],
 
     // Розмір за замовчуванням (перший варіант)
-    size: product.variants?.[0]?.title || null,
+    size: normalizeSize(product.variants?.[0]?.title || ""),
   }
 }
