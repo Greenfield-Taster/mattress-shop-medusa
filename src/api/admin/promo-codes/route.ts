@@ -1,6 +1,8 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { PROMO_CODE_MODULE } from "../../../modules/promo-code"
 import PromoCodeModuleService from "../../../modules/promo-code/service"
+import type { Logger } from "@medusajs/framework/types"
 
 /**
  * GET /admin/promo-codes
@@ -19,68 +21,61 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
 
     res.json({ promo_codes: promoCodes })
-  } catch (error: any) {
-    console.error("Error fetching promo codes:", error)
-    res.status(400).json({ message: error.message })
+  } catch (error: unknown) {
+    const logger: Logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    logger.error(`Error fetching promo codes: ${errorMessage}`)
+    res.status(400).json({ message: errorMessage })
   }
+}
+
+/**
+ * Типи для валідованого body (відповідає CreatePromoCodeSchema)
+ */
+interface CreatePromoCodeBody {
+  code: string
+  description?: string
+  discount_type: "percentage" | "fixed"
+  discount_value: number
+  min_order_amount: number
+  max_uses: number
+  starts_at?: string | null
+  expires_at?: string | null
+  is_active: boolean
 }
 
 /**
  * POST /admin/promo-codes
  *
- * Створює новий промокод
+ * Створює новий промокод.
+ * Валідація відбувається через Zod middleware (див. middlewares.ts)
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const promoCodeService: PromoCodeModuleService = req.scope.resolve(PROMO_CODE_MODULE)
+  const logger: Logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
 
   try {
+    // Body вже валідований і трансформований Zod middleware
     const {
       code,
       description,
       discount_type,
       discount_value,
-      min_order_amount = 0,
-      max_uses = 0,
+      min_order_amount,
+      max_uses,
       starts_at,
       expires_at,
-      is_active = true,
-    } = req.body as {
-      code: string
-      description?: string
-      discount_type: "percentage" | "fixed"
-      discount_value: number
-      min_order_amount?: number
-      max_uses?: number
-      starts_at?: string
-      expires_at?: string
-      is_active?: boolean
-    }
+      is_active,
+    } = req.body as CreatePromoCodeBody
 
-    // Валідація
-    if (!code || !code.trim()) {
-      return res.status(400).json({ message: "Код промокоду обов'язковий" })
-    }
-
-    if (!discount_type || !["percentage", "fixed"].includes(discount_type)) {
-      return res.status(400).json({ message: "Невірний тип знижки" })
-    }
-
-    if (typeof discount_value !== "number" || discount_value <= 0) {
-      return res.status(400).json({ message: "Значення знижки має бути більше 0" })
-    }
-
-    if (discount_type === "percentage" && discount_value > 100) {
-      return res.status(400).json({ message: "Відсоток знижки не може перевищувати 100" })
-    }
-
-    // Перевірка на унікальність коду
+    // Перевірка на унікальність коду (бізнес-логіка, не структурна валідація)
     const existing = await promoCodeService.findByCode(code)
     if (existing) {
       return res.status(400).json({ message: "Промокод з таким кодом вже існує" })
     }
 
     const promoCode = await promoCodeService.createPromoCodes({
-      code: code.toUpperCase().trim(),
+      code, // вже uppercase і trimmed завдяки Zod transform
       description: description?.trim() || null,
       discount_type,
       discount_value,
@@ -93,8 +88,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
 
     res.status(201).json({ promo_code: promoCode })
-  } catch (error: any) {
-    console.error("Error creating promo code:", error)
-    res.status(400).json({ message: error.message })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    logger.error(`Error creating promo code: ${errorMessage}`)
+    res.status(400).json({ message: errorMessage })
   }
 }
