@@ -62,8 +62,10 @@ class MattressModuleService extends MedusaService({
   /**
    * Створює один запис MattressAttributes
    * Обгортка для типізації
+   *
+   * MedusaJS генерує: createMattressAttributes (не "es" на кінці, бо Attributes вже закінчується на "s")
    */
-  async createMattressAttributes(
+  async createMattressAttr(
     data: CreateMattressAttributesDTO
   ): Promise<MattressAttributesType> {
     // Конвертуємо масиви в формат, який очікує MedusaJS (Record для JSON полів)
@@ -72,7 +74,8 @@ class MattressModuleService extends MedusaService({
       fillers: data.fillers as unknown as Record<string, unknown>,
       specs: data.specs as unknown as Record<string, unknown>,
     }
-    const result = await this.createMattressAttributeses(createData)
+    // @ts-expect-error - MedusaService генерує метод динамічно
+    const result = await this.createMattressAttributes(createData)
     return result
   }
 
@@ -80,7 +83,7 @@ class MattressModuleService extends MedusaService({
    * Оновлює один запис MattressAttributes
    * Обгортка для типізації
    */
-  async updateMattressAttributes(
+  async updateMattressAttr(
     data: UpdateMattressAttributesDTO
   ): Promise<MattressAttributesType> {
     const { id, fillers, specs, ...rest } = data
@@ -93,7 +96,8 @@ class MattressModuleService extends MedusaService({
       updateData.specs = specs as unknown as Record<string, unknown>
     }
 
-    const result = await this.updateMattressAttributeses({
+    // @ts-expect-error - MedusaService генерує метод динамічно
+    const result = await this.updateMattressAttributes({
       id,
       ...updateData,
     })
@@ -104,8 +108,9 @@ class MattressModuleService extends MedusaService({
    * Видаляє один запис MattressAttributes
    * Обгортка для типізації
    */
-  async deleteMattressAttributes(id: string): Promise<void> {
-    await this.deleteMattressAttributeses([id])
+  async deleteMattressAttr(id: string): Promise<void> {
+    // @ts-expect-error - MedusaService генерує метод динамічно
+    await this.deleteMattressAttributes([id])
   }
 }
 
