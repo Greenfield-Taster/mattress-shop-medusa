@@ -80,6 +80,41 @@ const UpdateMattressSchema = z.object({
   })).optional(),
 })
 
+/**
+ * Схема валідації для створення промокоду
+ */
+const CreatePromoCodeSchema = z.object({
+  code: z.string().min(1, "Код промокоду обов'язковий").transform(val => val.toUpperCase().trim()),
+  description: z.string().optional(),
+  discount_type: z.enum(["percentage", "fixed"], {
+    errorMap: () => ({ message: "Тип знижки має бути 'percentage' або 'fixed'" })
+  }),
+  discount_value: z.number().min(1, "Значення знижки має бути більше 0"),
+  min_order_amount: z.number().min(0).optional().default(0),
+  max_uses: z.number().min(0).optional().default(0),
+  starts_at: z.string().datetime().optional().nullable(),
+  expires_at: z.string().datetime().optional().nullable(),
+  is_active: z.boolean().optional().default(true),
+}).refine(
+  (data) => !(data.discount_type === "percentage" && data.discount_value > 100),
+  { message: "Відсоток знижки не може перевищувати 100", path: ["discount_value"] }
+)
+
+/**
+ * Схема валідації для оновлення промокоду
+ */
+const UpdatePromoCodeSchema = z.object({
+  code: z.string().min(1).transform(val => val.toUpperCase().trim()).optional(),
+  description: z.string().optional().nullable(),
+  discount_type: z.enum(["percentage", "fixed"]).optional(),
+  discount_value: z.number().min(1).optional(),
+  min_order_amount: z.number().min(0).optional(),
+  max_uses: z.number().min(0).optional(),
+  starts_at: z.string().datetime().optional().nullable(),
+  expires_at: z.string().datetime().optional().nullable(),
+  is_active: z.boolean().optional(),
+})
+
 export default defineMiddlewares({
   routes: [
     // Валідація створення матраца
@@ -104,6 +139,22 @@ export default defineMiddlewares({
       matcher: "/admin/mattresses/upload",
       middlewares: [
         upload.array("files", 10),
+      ],
+    },
+    // Валідація створення промокоду
+    {
+      method: "POST",
+      matcher: "/admin/promo-codes",
+      middlewares: [
+        validateAndTransformBody(CreatePromoCodeSchema),
+      ],
+    },
+    // Валідація оновлення промокоду
+    {
+      method: "PUT",
+      matcher: "/admin/promo-codes/:id",
+      middlewares: [
+        validateAndTransformBody(UpdatePromoCodeSchema),
       ],
     },
   ],
