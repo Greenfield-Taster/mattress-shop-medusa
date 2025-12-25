@@ -22,6 +22,10 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/promo-code",
     },
+    // Модуль користувачів (автентифікація)
+    {
+      resolve: "./src/modules/customer",
+    },
     // Local File Provider - для development
     // ВАЖЛИВО: MedusaJS обслуговує тільки /static директорію через Express.static
     {
