@@ -3,7 +3,7 @@ import { z } from "zod"
 import multer from "multer"
 
 // Multer для завантаження файлів в пам'ять
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB max
@@ -35,12 +35,12 @@ const CreateMattressSchema = z.object({
   cover_type: z.enum(["removable", "non_removable"]),
   max_weight: z.number().min(30).max(250),
   fillers: z.array(z.string()).optional(),
-  
+
   // Опис
   description_main: z.string().optional(),
   description_care: z.string().optional(),
   specs: z.array(z.string()).optional(),
-  
+
   // Прапорці
   is_new: z.boolean().optional(),
   discount_percent: z.number().min(0).max(100).optional(),
@@ -59,9 +59,7 @@ const UpdateMattressSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   status: z.enum(["draft", "published"]).optional(),
-  // Зображення - масив URL
   images: z.array(z.string()).optional(),
-  // Атрибути матраца
   height: z.number().min(3).max(50).optional(),
   hardness: z.enum(["H1", "H2", "H3", "H4"]).optional(),
   block_type: z.enum(["independent_spring", "bonnel_spring", "springless"]).optional(),
@@ -73,7 +71,6 @@ const UpdateMattressSchema = z.object({
   specs: z.array(z.string()).optional(),
   is_new: z.boolean().optional(),
   discount_percent: z.number().min(0).max(100).optional(),
-  // Оновлення цін варіантів
   variants: z.array(z.object({
     id: z.string(),
     price: z.number().min(0),
@@ -115,47 +112,79 @@ const UpdatePromoCodeSchema = z.object({
   is_active: z.boolean().optional(),
 })
 
+// ===== AUTH SCHEMAS =====
+
+const SendCodeSchema = z.object({
+  phone: z.string().min(1, "Номер телефону обов'язковий"),
+})
+
+const VerifyCodeSchema = z.object({
+  phone: z.string().min(1, "Номер телефону обов'язковий"),
+  code: z.string().length(6, "Код має містити 6 цифр"),
+})
+
+const GoogleAuthSchema = z.object({
+  credential: z.string().min(1, "Google credential обов'язковий"),
+})
+
+const UpdateProfileSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email("Невірний формат email").optional(),
+  avatar: z.string().url("Невірний формат URL").optional(),
+})
+
 export default defineMiddlewares({
   routes: [
-    // Валідація створення матраца
+    // ===== MATTRESS ROUTES =====
     {
       method: "POST",
       matcher: "/admin/mattresses",
-      middlewares: [
-        validateAndTransformBody(CreateMattressSchema),
-      ],
+      middlewares: [validateAndTransformBody(CreateMattressSchema)],
     },
-    // Валідація оновлення матраца
     {
       method: "PUT",
       matcher: "/admin/mattresses/:id",
-      middlewares: [
-        validateAndTransformBody(UpdateMattressSchema),
-      ],
+      middlewares: [validateAndTransformBody(UpdateMattressSchema)],
     },
-    // Завантаження зображень
     {
       method: "POST",
       matcher: "/admin/mattresses/upload",
-      middlewares: [
-        upload.array("files", 10),
-      ],
+      middlewares: [upload.array("files", 10)],
     },
-    // Валідація створення промокоду
+
+    // ===== PROMO CODE ROUTES =====
     {
       method: "POST",
       matcher: "/admin/promo-codes",
-      middlewares: [
-        validateAndTransformBody(CreatePromoCodeSchema),
-      ],
+      middlewares: [validateAndTransformBody(CreatePromoCodeSchema)],
     },
-    // Валідація оновлення промокоду
     {
       method: "PUT",
       matcher: "/admin/promo-codes/:id",
-      middlewares: [
-        validateAndTransformBody(UpdatePromoCodeSchema),
-      ],
+      middlewares: [validateAndTransformBody(UpdatePromoCodeSchema)],
+    },
+
+    // ===== AUTH ROUTES =====
+    {
+      method: "POST",
+      matcher: "/auth/send-code",
+      middlewares: [validateAndTransformBody(SendCodeSchema)],
+    },
+    {
+      method: "POST",
+      matcher: "/auth/verify-code",
+      middlewares: [validateAndTransformBody(VerifyCodeSchema)],
+    },
+    {
+      method: "POST",
+      matcher: "/auth/google",
+      middlewares: [validateAndTransformBody(GoogleAuthSchema)],
+    },
+    {
+      method: "PUT",
+      matcher: "/auth/update",
+      middlewares: [validateAndTransformBody(UpdateProfileSchema)],
     },
   ],
 })
