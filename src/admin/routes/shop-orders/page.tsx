@@ -1,0 +1,566 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Container,
+  Heading,
+  Table,
+  Badge,
+  Text,
+  DropdownMenu,
+  IconButton,
+  toast,
+  Toaster,
+  Select,
+} from "@medusajs/ui"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  EllipsisHorizontal,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock,
+  TruckFast,
+} from "@medusajs/icons"
+import { useState } from "react"
+
+// Типи
+interface OrderItem {
+  id: string
+  title: string
+  size: string | null
+  firmness: string | null
+  quantity: number
+  unit_price: number
+  total: number
+}
+
+interface Order {
+  id: string
+  order_number: string
+  full_name: string
+  phone: string
+  email: string
+  status: string
+  payment_status: string
+  payment_method: string
+  delivery_method: string
+  delivery_city: string | null
+  delivery_warehouse: string | null
+  subtotal: number
+  discount_amount: number
+  total: number
+  promo_code: string | null
+  items: OrderItem[]
+  items_count: number
+  created_at: string
+  updated_at: string
+}
+
+// Статуси замовлення
+const ORDER_STATUSES = [
+  { value: "pending", label: "Нове", color: "orange" as const },
+  { value: "confirmed", label: "Підтверджено", color: "blue" as const },
+  { value: "processing", label: "Обробляється", color: "purple" as const },
+  { value: "shipping", label: "В дорозі", color: "blue" as const },
+  { value: "delivered", label: "Доставлено", color: "green" as const },
+  { value: "cancelled", label: "Скасовано", color: "red" as const },
+]
+
+const PAYMENT_STATUSES = [
+  { value: "pending", label: "Очікує", color: "orange" as const },
+  { value: "paid", label: "Оплачено", color: "green" as const },
+  { value: "failed", label: "Помилка", color: "red" as const },
+  { value: "refunded", label: "Повернено", color: "grey" as const },
+]
+
+const DELIVERY_METHODS: Record<string, string> = {
+  "nova-poshta": "Нова Пошта",
+  "meest": "Meest",
+  "delivery": "Delivery",
+  "courier": "Кур'єр",
+  "pickup": "Самовивіз",
+}
+
+const PAYMENT_METHODS: Record<string, string> = {
+  "cash-on-delivery": "При отриманні",
+  "card-online": "Картка онлайн",
+  "google-apple-pay": "Google/Apple Pay",
+  "invoice": "Рахунок",
+}
+
+// Helpers
+const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString("uk-UA", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+const formatMoney = (amount: number): string => {
+  return `${amount.toLocaleString("uk-UA")} ₴`
+}
+
+const getStatusBadge = (status: string) => {
+  const statusInfo = ORDER_STATUSES.find((s) => s.value === status)
+  return (
+    <Badge color={statusInfo?.color || "grey"}>
+      {statusInfo?.label || status}
+    </Badge>
+  )
+}
+
+const getPaymentStatusBadge = (status: string) => {
+  const statusInfo = PAYMENT_STATUSES.find((s) => s.value === status)
+  return (
+    <Badge color={statusInfo?.color || "grey"}>
+      {statusInfo?.label || status}
+    </Badge>
+  )
+}
+
+/**
+ * Сторінка замовлень
+ * URL: /app/shop-orders
+ */
+const ShopOrdersPage = () => {
+  const queryClient = useQueryClient()
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  // Запит на отримання замовлень
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["shop-orders", filterStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (filterStatus) params.append("status", filterStatus)
+
+      const response = await fetch(`/admin/shop-orders?${params}`, {
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders")
+      }
+
+      return response.json()
+    },
+  })
+
+  // Мутація для оновлення статусу
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      payment_status,
+    }: {
+      id: string
+      status?: string
+      payment_status?: string
+    }) => {
+      const response = await fetch(`/admin/shop-orders/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, payment_status }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update order")
+      }
+
+      return response.json()
+    },
+    onSuccess: () => {
+      toast.success("Успіх", { description: "Статус оновлено" })
+      queryClient.invalidateQueries({ queryKey: ["shop-orders"] })
+    },
+    onError: () => {
+      toast.error("Помилка", { description: "Не вдалося оновити статус" })
+    },
+  })
+
+  const orders: Order[] = data?.orders || []
+
+  return (
+    <div className="flex flex-col gap-y-4">
+      <Toaster />
+
+      {/* Header */}
+      <Container className="divide-y p-0">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div>
+            <Heading level="h1">Замовлення</Heading>
+            <Text className="text-gray-500">
+              {isLoading ? "Завантаження..." : `${data?.count || 0} замовлень`}
+            </Text>
+          </div>
+
+          {/* Фільтр по статусу */}
+          <div className="flex items-center gap-4">
+            <Select
+              value={filterStatus || "all"}
+              onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Всі статуси" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="all">Всі статуси</Select.Item>
+                {ORDER_STATUSES.map((status) => (
+                  <Select.Item key={status.value} value={status.value}>
+                    {status.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
+          </div>
+        </div>
+      </Container>
+
+      {/* Orders Table */}
+      <Container className="divide-y p-0">
+        <div className="px-6 py-4">
+          {isLoading ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="animate-pulse">Завантаження...</div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <Text className="text-red-500 mb-4">Помилка завантаження</Text>
+              <button onClick={() => refetch()} className="text-blue-500">
+                Спробувати знову
+              </button>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📦</div>
+              <Heading level="h2" className="mb-2">
+                Замовлень поки немає
+              </Heading>
+              <Text className="text-gray-500">
+                Замовлення з'являться тут після оформлення
+              </Text>
+            </div>
+          ) : (
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell>Номер</Table.HeaderCell>
+                  <Table.HeaderCell>Клієнт</Table.HeaderCell>
+                  <Table.HeaderCell>Товари</Table.HeaderCell>
+                  <Table.HeaderCell>Сума</Table.HeaderCell>
+                  <Table.HeaderCell>Доставка</Table.HeaderCell>
+                  <Table.HeaderCell>Оплата</Table.HeaderCell>
+                  <Table.HeaderCell>Статус</Table.HeaderCell>
+                  <Table.HeaderCell>Дата</Table.HeaderCell>
+                  <Table.HeaderCell className="w-12"></Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {orders.map((order) => (
+                  <Table.Row
+                    key={order.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    {/* Номер */}
+                    <Table.Cell>
+                      <Text className="font-mono font-bold">
+                        {order.order_number}
+                      </Text>
+                    </Table.Cell>
+
+                    {/* Клієнт */}
+                    <Table.Cell>
+                      <div>
+                        <Text className="font-medium">{order.full_name}</Text>
+                        <Text className="text-xs text-gray-500">
+                          {order.phone}
+                        </Text>
+                      </div>
+                    </Table.Cell>
+
+                    {/* Товари */}
+                    <Table.Cell>
+                      <Text>{order.items_count} шт.</Text>
+                    </Table.Cell>
+
+                    {/* Сума */}
+                    <Table.Cell>
+                      <div>
+                        <Text className="font-bold">
+                          {formatMoney(order.total)}
+                        </Text>
+                        {order.discount_amount > 0 && (
+                          <Text className="text-xs text-green-600">
+                            -{formatMoney(order.discount_amount)}
+                          </Text>
+                        )}
+                      </div>
+                    </Table.Cell>
+
+                    {/* Доставка */}
+                    <Table.Cell>
+                      <div>
+                        <Text className="text-sm">
+                          {DELIVERY_METHODS[order.delivery_method] ||
+                            order.delivery_method}
+                        </Text>
+                        {order.delivery_city && (
+                          <Text className="text-xs text-gray-500">
+                            {order.delivery_city}
+                          </Text>
+                        )}
+                      </div>
+                    </Table.Cell>
+
+                    {/* Оплата */}
+                    <Table.Cell>
+                      <div className="flex flex-col gap-1">
+                        <Text className="text-xs">
+                          {PAYMENT_METHODS[order.payment_method] ||
+                            order.payment_method}
+                        </Text>
+                        {getPaymentStatusBadge(order.payment_status)}
+                      </div>
+                    </Table.Cell>
+
+                    {/* Статус */}
+                    <Table.Cell>{getStatusBadge(order.status)}</Table.Cell>
+
+                    {/* Дата */}
+                    <Table.Cell>
+                      <Text className="text-sm text-gray-500">
+                        {formatDate(order.created_at)}
+                      </Text>
+                    </Table.Cell>
+
+                    {/* Actions */}
+                    <Table.Cell onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenu.Trigger asChild>
+                          <IconButton variant="transparent">
+                            <EllipsisHorizontal />
+                          </IconButton>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content>
+                          <DropdownMenu.Item
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <Eye className="mr-2" />
+                            Переглянути
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator />
+                          <DropdownMenu.Label>Змінити статус</DropdownMenu.Label>
+                          {ORDER_STATUSES.map((status) => (
+                            <DropdownMenu.Item
+                              key={status.value}
+                              onClick={() =>
+                                updateStatusMutation.mutate({
+                                  id: order.id,
+                                  status: status.value,
+                                })
+                              }
+                              disabled={order.status === status.value}
+                            >
+                              {status.label}
+                            </DropdownMenu.Item>
+                          ))}
+                          <DropdownMenu.Separator />
+                          <DropdownMenu.Label>Статус оплати</DropdownMenu.Label>
+                          {PAYMENT_STATUSES.map((status) => (
+                            <DropdownMenu.Item
+                              key={status.value}
+                              onClick={() =>
+                                updateStatusMutation.mutate({
+                                  id: order.id,
+                                  payment_status: status.value,
+                                })
+                              }
+                              disabled={order.payment_status === status.value}
+                            >
+                              {status.label}
+                            </DropdownMenu.Item>
+                          ))}
+                        </DropdownMenu.Content>
+                      </DropdownMenu>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          )}
+        </div>
+      </Container>
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Heading level="h2">
+                    Замовлення {selectedOrder.order_number}
+                  </Heading>
+                  <Text className="text-gray-500">
+                    {formatDate(selectedOrder.created_at)}
+                  </Text>
+                </div>
+                <div className="flex gap-2">
+                  {getStatusBadge(selectedOrder.status)}
+                  {getPaymentStatusBadge(selectedOrder.payment_status)}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Клієнт */}
+              <div>
+                <Heading level="h3" className="mb-2">
+                  Клієнт
+                </Heading>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                  <Text>
+                    <strong>ПІБ:</strong> {selectedOrder.full_name}
+                  </Text>
+                  <Text>
+                    <strong>Телефон:</strong> {selectedOrder.phone}
+                  </Text>
+                  <Text>
+                    <strong>Email:</strong> {selectedOrder.email}
+                  </Text>
+                </div>
+              </div>
+
+              {/* Доставка */}
+              <div>
+                <Heading level="h3" className="mb-2">
+                  Доставка
+                </Heading>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                  <Text>
+                    <strong>Спосіб:</strong>{" "}
+                    {DELIVERY_METHODS[selectedOrder.delivery_method] ||
+                      selectedOrder.delivery_method}
+                  </Text>
+                  {selectedOrder.delivery_city && (
+                    <Text>
+                      <strong>Місто:</strong> {selectedOrder.delivery_city}
+                    </Text>
+                  )}
+                  {selectedOrder.delivery_warehouse && (
+                    <Text>
+                      <strong>Відділення:</strong>{" "}
+                      {selectedOrder.delivery_warehouse}
+                    </Text>
+                  )}
+                </div>
+              </div>
+
+              {/* Товари */}
+              <div>
+                <Heading level="h3" className="mb-2">
+                  Товари
+                </Heading>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left p-3 text-sm font-medium">
+                          Товар
+                        </th>
+                        <th className="text-center p-3 text-sm font-medium">
+                          К-сть
+                        </th>
+                        <th className="text-right p-3 text-sm font-medium">
+                          Ціна
+                        </th>
+                        <th className="text-right p-3 text-sm font-medium">
+                          Сума
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.items.map((item) => (
+                        <tr key={item.id} className="border-t">
+                          <td className="p-3">
+                            <div>
+                              <Text className="font-medium">{item.title}</Text>
+                              {(item.size || item.firmness) && (
+                                <Text className="text-xs text-gray-500">
+                                  {[item.size, item.firmness]
+                                    .filter(Boolean)
+                                    .join(" • ")}
+                                </Text>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 text-center">{item.quantity}</td>
+                          <td className="p-3 text-right">
+                            {formatMoney(item.unit_price)}
+                          </td>
+                          <td className="p-3 text-right font-medium">
+                            {formatMoney(item.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Підсумок */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex justify-between mb-2">
+                  <Text>Сума товарів:</Text>
+                  <Text>{formatMoney(selectedOrder.subtotal)}</Text>
+                </div>
+                {selectedOrder.discount_amount > 0 && (
+                  <div className="flex justify-between mb-2 text-green-600">
+                    <Text>
+                      Знижка
+                      {selectedOrder.promo_code &&
+                        ` (${selectedOrder.promo_code})`}
+                      :
+                    </Text>
+                    <Text>-{formatMoney(selectedOrder.discount_amount)}</Text>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2 border-t font-bold text-lg">
+                  <Text>Разом:</Text>
+                  <Text>{formatMoney(selectedOrder.total)}</Text>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t flex justify-end">
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+              >
+                Закрити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Конфігурація роуту
+export const config = defineRouteConfig({
+  label: "Замовлення",
+  icon: TruckFast,
+})
+
+export default ShopOrdersPage
