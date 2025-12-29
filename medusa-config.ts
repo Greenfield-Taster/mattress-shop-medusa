@@ -26,6 +26,10 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/customer",
     },
+    // Модуль замовлень
+    {
+      resolve: "./src/modules/order",
+    },
     // Local File Provider - для development
     // ВАЖЛИВО: MedusaJS обслуговує тільки /static директорію через Express.static
     {
