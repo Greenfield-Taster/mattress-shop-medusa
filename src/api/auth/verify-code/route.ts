@@ -89,6 +89,9 @@ export async function POST(
         firstName: customer.first_name,
         lastName: customer.last_name,
         avatar: customer.avatar,
+        city: customer.city,
+        address: customer.address,
+        createdAt: customer.created_at,
       },
     })
   } catch (error) {
