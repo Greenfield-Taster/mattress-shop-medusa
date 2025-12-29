@@ -7,6 +7,9 @@ interface UpdateCustomerBody {
   last_name?: string
   email?: string
   phone?: string
+  city?: string
+  address?: string
+  avatar?: string
   is_active?: boolean
 }
 
@@ -50,7 +53,7 @@ export async function PUT(
 ) {
   try {
     const { id } = req.params
-    const { first_name, last_name, email, phone, is_active } = req.body
+    const { first_name, last_name, email, phone, city, address, avatar, is_active } = req.body
 
     const customerService = req.scope.resolve<CustomerModuleService>(CUSTOMER_MODULE)
 
@@ -90,6 +93,9 @@ export async function PUT(
       last_name: last_name ?? existingCustomer.last_name,
       email: email ?? existingCustomer.email,
       phone: phone ?? existingCustomer.phone,
+      city: city ?? existingCustomer.city,
+      address: address ?? existingCustomer.address,
+      avatar: avatar ?? existingCustomer.avatar,
       is_active: is_active ?? existingCustomer.is_active,
     })
 

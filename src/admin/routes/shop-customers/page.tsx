@@ -15,6 +15,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { EllipsisHorizontal, PencilSquare, XCircle, CheckCircle, MagnifyingGlass } from "@medusajs/icons"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 // Типи
 interface ShopCustomer {
@@ -24,6 +25,8 @@ interface ShopCustomer {
   first_name: string | null
   last_name: string | null
   avatar: string | null
+  city: string | null
+  address: string | null
   google_id: string | null
   is_active: boolean
   last_login_at: string | null
@@ -56,6 +59,7 @@ const getAuthMethod = (customer: ShopCustomer): string => {
 const ShopCustomersPage = () => {
   const queryClient = useQueryClient()
   const prompt = usePrompt()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
 
   // Запит на отримання списку користувачів
@@ -297,6 +301,13 @@ const ShopCustomersPage = () => {
                           </IconButton>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
+                          <DropdownMenu.Item
+                            onClick={() => navigate(`/shop-customers/${customer.id}/edit`)}
+                          >
+                            <PencilSquare className="mr-2" />
+                            Редагувати
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator />
                           <DropdownMenu.Item
                             onClick={() => handleToggleActive(customer)}
                             disabled={toggleActiveMutation.isPending}
