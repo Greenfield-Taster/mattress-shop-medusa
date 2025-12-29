@@ -1,6 +1,7 @@
 import { defineMiddlewares, validateAndTransformBody } from "@medusajs/framework/http"
 import { z } from "zod"
 import multer from "multer"
+import cors from "cors"
 
 // Multer для завантаження файлів в пам'ять
 const upload = multer({
@@ -137,8 +138,26 @@ const UpdateProfileSchema = z.object({
   phone: z.string().optional(), // ігнорується в route, але фронтенд відправляє
 })
 
+// CORS налаштування для кастомних роутів
+const storeCorsOptions = {
+  origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-publishable-api-key"],
+}
+
 export default defineMiddlewares({
   routes: [
+    // ===== SHOP-ORDERS CORS =====
+    {
+      matcher: "/shop-orders",
+      middlewares: [cors(storeCorsOptions)],
+    },
+    {
+      matcher: "/shop-orders/*",
+      middlewares: [cors(storeCorsOptions)],
+    },
+
     // ===== MATTRESS ROUTES =====
     {
       method: "POST",
