@@ -8,6 +8,8 @@ interface UpdateProfileRequestBody {
   lastName?: string
   email?: string
   avatar?: string
+  city?: string
+  address?: string
 }
 
 /**
@@ -44,10 +46,16 @@ export async function PUT(
       })
     }
 
-    const { firstName, lastName, email, avatar } = req.body
+    const { firstName, lastName, email, avatar, city, address } = req.body
+
+    // Нормалізуємо порожні рядки в null
+    const normalizedEmail = email?.trim() || null
+    const normalizedAvatar = avatar?.trim() || null
+    const normalizedCity = city?.trim() || null
+    const normalizedAddress = address?.trim() || null
 
     // Валідація email якщо передано
-    if (email && !isValidEmail(email)) {
+    if (normalizedEmail && !isValidEmail(normalizedEmail)) {
       return res.status(400).json({
         success: false,
         error: "Невірний формат email",
@@ -68,8 +76,8 @@ export async function PUT(
     }
 
     // Перевіряємо унікальність email якщо він змінюється
-    if (email && email !== existingCustomer.email) {
-      const emailExists = await customerService.findByEmail(email)
+    if (normalizedEmail && normalizedEmail !== existingCustomer.email) {
+      const emailExists = await customerService.findByEmail(normalizedEmail)
       if (emailExists && emailExists.id !== payload.userId) {
         return res.status(400).json({
           success: false,
@@ -81,10 +89,12 @@ export async function PUT(
     // Оновлюємо профіль
     const updatedCustomer = await customerService.updateCustomerData({
       id: payload.userId,
-      first_name: firstName ?? existingCustomer.first_name,
-      last_name: lastName ?? existingCustomer.last_name,
-      email: email ?? existingCustomer.email,
-      avatar: avatar ?? existingCustomer.avatar,
+      first_name: firstName?.trim() || existingCustomer.first_name,
+      last_name: lastName?.trim() || existingCustomer.last_name,
+      email: normalizedEmail ?? existingCustomer.email,
+      avatar: normalizedAvatar ?? existingCustomer.avatar,
+      city: normalizedCity ?? existingCustomer.city,
+      address: normalizedAddress ?? existingCustomer.address,
     })
 
     return res.status(200).json({
@@ -96,6 +106,9 @@ export async function PUT(
         firstName: updatedCustomer.first_name,
         lastName: updatedCustomer.last_name,
         avatar: updatedCustomer.avatar,
+        city: updatedCustomer.city,
+        address: updatedCustomer.address,
+        createdAt: updatedCustomer.created_at,
       },
     })
   } catch (error) {

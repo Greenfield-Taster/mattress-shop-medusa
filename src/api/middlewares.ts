@@ -130,8 +130,11 @@ const GoogleAuthSchema = z.object({
 const UpdateProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  email: z.string().email("Невірний формат email").optional(),
-  avatar: z.string().url("Невірний формат URL").optional(),
+  email: z.string().email("Невірний формат email").optional().or(z.literal("")),
+  avatar: z.string().url("Невірний формат URL").optional().or(z.literal("")),
+  city: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(), // ігнорується в route, але фронтенд відправляє
 })
 
 export default defineMiddlewares({
