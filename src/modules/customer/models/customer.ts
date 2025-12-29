@@ -30,6 +30,14 @@ export const Customer = model
     /** URL аватара (з Google або завантажений) */
     avatar: model.text().nullable(),
 
+    // ===== АДРЕСНІ ДАНІ =====
+
+    /** Місто користувача */
+    city: model.text().nullable(),
+
+    /** Адреса доставки */
+    address: model.text().nullable(),
+
     // ===== SMS ВЕРИФІКАЦІЯ =====
 
     /**
