@@ -184,14 +184,17 @@ export function getMinPrice(variants: ProductVariant[] | undefined): number {
 }
 
 /**
- * Розраховує стару ціну на основі знижки
+ * Розраховує ціну зі знижкою
+ * basePrice - базова ціна товару (стара ціна)
+ * discountPercent - відсоток знижки
+ * Повертає ціну після застосування знижки
  */
-export function calculateOldPrice(
-  price: number,
+export function calculateDiscountedPrice(
+  basePrice: number,
   discountPercent: number | null | undefined
-): number | null {
-  if (!discountPercent || discountPercent <= 0 || !price) return null
-  return Math.round(price / (1 - discountPercent / 100))
+): number {
+  if (!discountPercent || discountPercent <= 0 || !basePrice) return basePrice
+  return Math.round(basePrice * (1 - discountPercent / 100))
 }
 
 // ===== ГРУПУВАННЯ =====
@@ -319,20 +322,20 @@ export function formatProductForStore(product: ProductWithAttributes): object {
     description_care: attrs?.description_care, // Alias
     specs: attrs?.specs || [],
 
-    // Ціни
-    price: price,
-    oldPrice: calculateOldPrice(price, discountPercent),
+    // Ціни (basePrice - ціна з бази, price - ціна зі знижкою)
+    price: calculateDiscountedPrice(price, discountPercent),
+    oldPrice: discountPercent > 0 ? price : null,
 
     // Варіанти (розміри з цінами)
     variants: product.variants?.map(v => {
       const priceArray = v.prices || v.price_set?.prices
-      const variantPrice = priceArray?.[0]?.amount || 0
+      const variantBasePrice = priceArray?.[0]?.amount || 0
       return {
         id: v.id,
         size: normalizeSize(v.title), // Нормалізуємо для сумісності з фронтендом
         sku: v.sku,
-        price: variantPrice,
-        oldPrice: calculateOldPrice(variantPrice, discountPercent),
+        price: calculateDiscountedPrice(variantBasePrice, discountPercent),
+        oldPrice: discountPercent > 0 ? variantBasePrice : null,
         currency: priceArray?.[0]?.currency_code || "uah",
       }
     }) || [],

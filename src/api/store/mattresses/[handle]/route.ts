@@ -5,7 +5,7 @@ import {
   formatCoverType,
   formatFillers,
   getMinPrice,
-  calculateOldPrice,
+  calculateDiscountedPrice,
   groupVariantsByCategory,
   normalizeSize,
   type ProductWithAttributes,
@@ -93,23 +93,20 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       allVariants:
         product.variants?.map((v) => {
           const priceArray = v.prices || v.price_set?.prices
-          const variantPrice = priceArray?.[0]?.amount || 0
+          const variantBasePrice = priceArray?.[0]?.amount || 0
           return {
             id: v.id,
             size: normalizeSize(v.title), // Нормалізуємо для сумісності з фронтендом
             sku: v.sku,
-            price: variantPrice,
-            oldPrice: calculateOldPrice(variantPrice, discountPercent),
+            price: calculateDiscountedPrice(variantBasePrice, discountPercent),
+            oldPrice: discountPercent > 0 ? variantBasePrice : null,
             currency: priceArray?.[0]?.currency_code || "uah",
           }
         }) || [],
 
-      // Мінімальна ціна
-      price: getMinPrice(product.variants),
-      oldPrice: calculateOldPrice(
-        getMinPrice(product.variants),
-        discountPercent
-      ),
+      // Мінімальна ціна (basePrice - з бази, price - зі знижкою)
+      price: calculateDiscountedPrice(getMinPrice(product.variants), discountPercent),
+      oldPrice: discountPercent > 0 ? getMinPrice(product.variants) : null,
     }
 
     res.json({ mattress })
