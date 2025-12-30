@@ -628,7 +628,7 @@ const EditMattressPage = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {variantPrices.map(vp => (
-              <div key={vp.id} className="border rounded-lg p-3">
+              <div key={vp.id} className="border border-ui-border-base bg-ui-bg-base rounded-lg p-3">
                 <Label className="font-medium mb-2 block">{vp.title}</Label>
                 <div className="relative">
                   <Input

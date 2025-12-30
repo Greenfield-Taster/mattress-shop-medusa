@@ -672,12 +672,12 @@ const CreateMattressPage = () => {
                     {sizes.map(size => {
                       const sizeData = sizePrices.find(sp => sp.size === size)!
                       return (
-                        <div 
+                        <div
                           key={size}
                           className={`border rounded-lg p-3 transition-all ${
-                            sizeData.enabled 
-                              ? 'border-gray-200 bg-white' 
-                              : 'border-gray-100 bg-gray-50 opacity-60'
+                            sizeData.enabled
+                              ? 'border-ui-border-base bg-ui-bg-base'
+                              : 'border-ui-border-base bg-ui-bg-subtle opacity-60'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
