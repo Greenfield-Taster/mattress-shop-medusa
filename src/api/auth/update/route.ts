@@ -7,7 +7,6 @@ interface UpdateProfileRequestBody {
   firstName?: string
   lastName?: string
   email?: string
-  avatar?: string
   city?: string
   address?: string
 }
@@ -46,11 +45,10 @@ export async function PUT(
       })
     }
 
-    const { firstName, lastName, email, avatar, city, address } = req.body
+    const { firstName, lastName, email, city, address } = req.body
 
     // Нормалізуємо порожні рядки в null
     const normalizedEmail = email?.trim() || null
-    const normalizedAvatar = avatar?.trim() || null
     const normalizedCity = city?.trim() || null
     const normalizedAddress = address?.trim() || null
 
@@ -92,7 +90,6 @@ export async function PUT(
       first_name: firstName?.trim() || existingCustomer.first_name,
       last_name: lastName?.trim() || existingCustomer.last_name,
       email: normalizedEmail ?? existingCustomer.email,
-      avatar: normalizedAvatar ?? existingCustomer.avatar,
       city: normalizedCity ?? existingCustomer.city,
       address: normalizedAddress ?? existingCustomer.address,
     })
@@ -105,7 +102,6 @@ export async function PUT(
         email: updatedCustomer.email,
         firstName: updatedCustomer.first_name,
         lastName: updatedCustomer.last_name,
-        avatar: updatedCustomer.avatar,
         city: updatedCustomer.city,
         address: updatedCustomer.address,
         createdAt: updatedCustomer.created_at,

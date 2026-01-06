@@ -69,8 +69,8 @@ export async function POST(
     }
 
     // Витягуємо дані користувача з Google
-    const { sub: googleId, email, given_name, family_name, picture } = payload
-    console.log("[auth/google] Google payload:", { googleId, email, given_name, family_name, picture })
+    const { sub: googleId, email, given_name, family_name } = payload
+    console.log("[auth/google] Google payload:", { googleId, email, given_name, family_name })
 
     if (!email) {
       return res.status(400).json({
@@ -88,7 +88,6 @@ export async function POST(
       email,
       firstName: given_name,
       lastName: family_name,
-      avatar: picture,
     })
 
     // Генеруємо JWT токен
@@ -103,7 +102,6 @@ export async function POST(
         email: customer.email,
         firstName: customer.first_name,
         lastName: customer.last_name,
-        avatar: customer.avatar,
         city: customer.city,
         address: customer.address,
         createdAt: customer.created_at,

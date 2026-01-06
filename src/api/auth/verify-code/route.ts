@@ -88,7 +88,6 @@ export async function POST(
         email: customer.email,
         firstName: customer.first_name,
         lastName: customer.last_name,
-        avatar: customer.avatar,
         city: customer.city,
         address: customer.address,
         createdAt: customer.created_at,
