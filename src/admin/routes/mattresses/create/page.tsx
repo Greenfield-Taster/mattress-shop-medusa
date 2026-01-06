@@ -788,20 +788,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Превью специфікацій */}
-        <Container className="divide-y p-0">
-          <div className="px-6 py-4">
-            <Heading level="h2" className="mb-4">Специфікації (автогенерація)</Heading>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                {generateSpecs().map((spec, i) => (
-                  <li key={i}>{spec}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Container>
-
         {/* Actions */}
         <Container className="p-0 sticky bottom-0 bg-white border-t shadow-lg">
           <div className="flex items-center justify-between px-6 py-4">
