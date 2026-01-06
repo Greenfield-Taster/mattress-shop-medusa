@@ -86,21 +86,37 @@ export function validatePhoneNumber(phone: string): boolean {
 }
 
 /**
- * Нормалізувати номер телефону до формату +380XXXXXXXXX
+ * Нормалізувати номер телефону до формату 0XXXXXXXXX (10 цифр)
+ * Приймає будь-який формат: +380XXXXXXXXX, 380XXXXXXXXX, 0XXXXXXXXX
  */
 export function normalizePhoneNumber(phone: string): string {
-  // Видаляємо все крім цифр і +
-  let cleaned = phone.replace(/[^\d+]/g, "")
+  // Видаляємо все крім цифр
+  let cleaned = phone.replace(/\D/g, "")
 
-  // Якщо починається з 0, замінюємо на +380
-  if (cleaned.startsWith("0")) {
-    cleaned = "+380" + cleaned.slice(1)
+  // Якщо починається з 380, видаляємо і додаємо 0
+  if (cleaned.startsWith("380")) {
+    cleaned = "0" + cleaned.slice(3)
   }
 
-  // Якщо починається з 380 без +, додаємо +
-  if (cleaned.startsWith("380") && !cleaned.startsWith("+")) {
-    cleaned = "+" + cleaned
+  // Якщо не починається з 0, додаємо
+  if (!cleaned.startsWith("0") && cleaned.length === 9) {
+    cleaned = "0" + cleaned
   }
 
   return cleaned
+}
+
+/**
+ * Форматувати номер телефону для відображення: +380 XX XXX XX XX
+ */
+export function formatPhoneForDisplay(phone: string): string {
+  const normalized = normalizePhoneNumber(phone)
+
+  if (normalized.length !== 10) {
+    return phone // Повертаємо як є, якщо формат некоректний
+  }
+
+  // 0XXXXXXXXX -> +380 XX XXX XX XX
+  const digits = normalized.slice(1) // Видаляємо перший 0
+  return `+380 ${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 7)} ${digits.slice(7)}`
 }
