@@ -107,13 +107,32 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Фільтр по розмірам (перевіряємо варіанти)
-    // Нормалізуємо розміри для порівняння (різні варіанти символу "х")
+    // "нестандартний розмір" або "custom" показує всі матраци (бо всі можуть бути на замовлення)
     if (sizesArr.length > 0) {
-      const normalizedFilterSizes = sizesArr.map(normalizeSize)
-      mattresses = mattresses.filter((m) => {
-        const productSizes = m.variants?.map((v) => normalizeSize(v.title)) || []
-        return normalizedFilterSizes.some((size) => productSizes.includes(size))
-      })
+      const hasCustomSize = sizesArr.some(s =>
+        s.toLowerCase() === "нестандартний розмір" ||
+        s.toLowerCase() === "custom" ||
+        normalizeSize(s) === "нестандартний розмір"
+      )
+
+      // Якщо вибрано ТІЛЬКИ нестандартний розмір - показуємо всі матраци
+      if (hasCustomSize && sizesArr.length === 1) {
+        // Пропускаємо фільтр - показуємо всі
+      } else {
+        // Фільтруємо по стандартних розмірах
+        const standardSizes = sizesArr.filter(s =>
+          s.toLowerCase() !== "нестандартний розмір" &&
+          s.toLowerCase() !== "custom"
+        )
+
+        if (standardSizes.length > 0) {
+          const normalizedFilterSizes = standardSizes.map(normalizeSize)
+          mattresses = mattresses.filter((m) => {
+            const productSizes = m.variants?.map((v) => normalizeSize(v.title)) || []
+            return normalizedFilterSizes.some((size) => productSizes.includes(size))
+          })
+        }
+      }
     }
 
     // Фільтр по типу блоку
