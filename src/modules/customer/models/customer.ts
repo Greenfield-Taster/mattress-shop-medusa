@@ -27,9 +27,6 @@ export const Customer = model
     /** Прізвище користувача */
     last_name: model.text().nullable(),
 
-    /** URL аватара (з Google або завантажений) */
-    avatar: model.text().nullable(),
-
     // ===== АДРЕСНІ ДАНІ =====
 
     /** Місто користувача */

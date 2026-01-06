@@ -11,7 +11,6 @@ export interface CreateCustomerDTO {
   email?: string | null
   first_name?: string | null
   last_name?: string | null
-  avatar?: string | null
   city?: string | null
   address?: string | null
   google_id?: string | null
@@ -27,7 +26,6 @@ export interface UpdateCustomerDTO {
   email?: string | null
   first_name?: string | null
   last_name?: string | null
-  avatar?: string | null
   city?: string | null
   address?: string | null
   google_id?: string | null
@@ -163,7 +161,6 @@ class CustomerModuleService extends MedusaService({
     email: string
     firstName?: string
     lastName?: string
-    avatar?: string
   }): Promise<CustomerType> {
     // Спочатку шукаємо за Google ID
     let customer = await this.findByGoogleId(data.googleId)
@@ -180,7 +177,6 @@ class CustomerModuleService extends MedusaService({
       return await this.updateCustomerData({
         id: customer.id,
         google_id: data.googleId,
-        avatar: data.avatar || customer.avatar,
         last_login_at: new Date(),
       })
     }
@@ -191,7 +187,6 @@ class CustomerModuleService extends MedusaService({
       email: data.email,
       first_name: data.firstName,
       last_name: data.lastName,
-      avatar: data.avatar,
       last_login_at: new Date(),
     })
   }
