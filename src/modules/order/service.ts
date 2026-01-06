@@ -76,34 +76,26 @@ class OrderModuleService extends MedusaService({
 }) {
   /**
    * Генерує унікальний номер замовлення
-   * Формат: ORD-YYYY-XXXXX
+   * Формат: випадкове 8-значне число (10000000 - 99999999)
    */
   async generateOrderNumber(): Promise<string> {
-    const year = new Date().getFullYear()
-    const prefix = `ORD-${year}-`
+    let orderNumber: string
+    let isUnique = false
 
-    // Отримуємо останнє замовлення з цього року
-    const orders = await this.listOrders(
-      {},
-      {
-        order: { created_at: "DESC" },
-        take: 1,
-      }
-    )
+    // Генеруємо унікальний номер
+    while (!isUnique) {
+      // Випадкове число від 10000000 до 99999999
+      const randomNumber = Math.floor(10000000 + Math.random() * 90000000)
+      orderNumber = randomNumber.toString()
 
-    let nextNumber = 1
-
-    if (orders.length > 0) {
-      const lastOrderNumber = orders[0].order_number
-      // Парсимо номер з останнього замовлення
-      const match = lastOrderNumber.match(/ORD-\d{4}-(\d+)/)
-      if (match) {
-        nextNumber = parseInt(match[1], 10) + 1
+      // Перевіряємо унікальність
+      const existing = await this.listOrders({ order_number: orderNumber })
+      if (existing.length === 0) {
+        isUnique = true
       }
     }
 
-    // Формат: 00001, 00002, ...
-    return `${prefix}${nextNumber.toString().padStart(5, "0")}`
+    return orderNumber!
   }
 
   /**
