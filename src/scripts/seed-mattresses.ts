@@ -90,15 +90,46 @@ export default async function seedMattresses({ container }: ExecArgs) {
     },
   ]
 
-  // Стандартні розміри
-  const sizes = [
-    "60×120", "70×140", "70×160",
-    "80×190", "80×200", "90×190", "90×200",
-    "120×190", "120×200",
-    "140×190", "140×200", "160×190", "160×200",
-    "180×190", "180×200",
-    "200×200",
+  // Всі доступні розміри з модифікаторами цін (29 стандартних розмірів, синхронізовано з MattressQuiz)
+  const sizesWithPrices = [
+    // Дитячі (8 розмірів)
+    { size: "60×120", priceModifier: -3000 },
+    { size: "70×140", priceModifier: -2800 },
+    { size: "70×150", priceModifier: -2600 },
+    { size: "70×160", priceModifier: -2400 },
+    { size: "70×170", priceModifier: -2200 },
+    { size: "70×180", priceModifier: -2000 },
+    { size: "70×190", priceModifier: -1800 },
+    { size: "70×200", priceModifier: -1600 },
+    // Односпальні (8 розмірів)
+    { size: "80×150", priceModifier: -1400 },
+    { size: "80×160", priceModifier: -1300 },
+    { size: "80×170", priceModifier: -1200 },
+    { size: "80×180", priceModifier: -1100 },
+    { size: "80×190", priceModifier: -1000 },
+    { size: "80×200", priceModifier: -800 },
+    { size: "90×190", priceModifier: -500 },
+    { size: "90×200", priceModifier: -300 },
+    // Полуторні (2 розміри)
+    { size: "120×190", priceModifier: 0 },
+    { size: "120×200", priceModifier: 200 },
+    // Двоспальні (8 розмірів)
+    { size: "140×190", priceModifier: 500 },
+    { size: "140×200", priceModifier: 700 },
+    { size: "150×190", priceModifier: 900 },
+    { size: "150×200", priceModifier: 1100 },
+    { size: "160×190", priceModifier: 1300 },
+    { size: "160×200", priceModifier: 1500 },
+    { size: "170×190", priceModifier: 1700 },
+    { size: "170×200", priceModifier: 1900 },
+    // King Size (2 розміри)
+    { size: "180×190", priceModifier: 2100 },
+    { size: "180×200", priceModifier: 2300 },
+    // King Size XL (1 розмір)
+    { size: "200×200", priceModifier: 2500 },
   ]
+
+  const sizes = sizesWithPrices.map(s => s.size)
 
   for (const data of mattressesData) {
     logger.info(`Creating mattress: ${data.title}`)
@@ -119,14 +150,14 @@ export default async function seedMattresses({ container }: ExecArgs) {
                   values: sizes,
                 },
               ],
-              variants: sizes.map((size) => ({
+              variants: sizesWithPrices.map(({ size, priceModifier }) => ({
                 title: size,
                 sku: `${data.handle}-${size}`.toUpperCase().replace(/[×х]/g, "X"),
                 options: { "Розмір": size },
                 manage_inventory: false,
                 prices: [
                   {
-                    amount: data.basePrice,
+                    amount: Math.max(1000, data.basePrice + priceModifier), // Мінімальна ціна 1000
                     currency_code: "uah",
                   },
                 ],
