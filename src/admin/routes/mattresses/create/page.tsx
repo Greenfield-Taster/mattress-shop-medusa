@@ -26,10 +26,20 @@ const HARDNESS_OPTIONS = [
   { value: "H4", label: "H4 (жорсткий)" },
 ]
 
+// Синхронізовано з фронтендом (Catalog.jsx filterOptions.blockTypes)
 const BLOCK_TYPE_OPTIONS = [
-  { value: "independent_spring", label: "Незалежний пружинний блок" },
-  { value: "bonnel_spring", label: "Залежний пружинний блок (Bonnel)" },
   { value: "springless", label: "Безпружинний" },
+  { value: "independent_spring", label: "Незалежний пружинний блок" },
+]
+
+// Синхронізовано з фронтендом (Catalog.jsx filterOptions.types)
+const PRODUCT_TYPE_OPTIONS = [
+  { value: "springless", label: "Безпружинні" },
+  { value: "spring", label: "Пружинні" },
+  { value: "children", label: "Дитячі" },
+  { value: "topper", label: "Топери" },
+  { value: "rolled", label: "Скручені" },
+  { value: "accessories", label: "Аксесуари" },
 ]
 
 const COVER_TYPE_OPTIONS = [
@@ -37,40 +47,58 @@ const COVER_TYPE_OPTIONS = [
   { value: "non_removable", label: "Незнімний" },
 ]
 
+// Синхронізовано з фронтендом (Catalog.jsx filterOptions.fillers)
 const FILLER_OPTIONS = [
   { value: "latex", label: "Латекс" },
-  { value: "memory_foam", label: "Піна з пам'яттю" },
-  { value: "coconut", label: "Кокосове волокно" },
   { value: "latex_foam", label: "Латексована піна" },
-  { value: "felt", label: "Войлок" },
-  { value: "polyurethane", label: "Пінополіуретан" },
+  { value: "memory_foam", label: "Піна з пам'яттю" },
+  { value: "coconut", label: "Кокосове полотно" },
 ]
 
+// 29 стандартних розмірів (синхронізовано з MattressQuiz на фронтенді)
 const MATTRESS_SIZES = [
+  // Дитячі (8 розмірів)
   { size: "60×120", category: "Дитячий" },
   { size: "70×140", category: "Дитячий" },
+  { size: "70×150", category: "Дитячий" },
   { size: "70×160", category: "Дитячий" },
+  { size: "70×170", category: "Дитячий" },
+  { size: "70×180", category: "Дитячий" },
+  { size: "70×190", category: "Дитячий" },
+  { size: "70×200", category: "Дитячий" },
+  // Односпальні (8 розмірів)
+  { size: "80×150", category: "Односпальний" },
+  { size: "80×160", category: "Односпальний" },
+  { size: "80×170", category: "Односпальний" },
+  { size: "80×180", category: "Односпальний" },
   { size: "80×190", category: "Односпальний" },
   { size: "80×200", category: "Односпальний" },
   { size: "90×190", category: "Односпальний" },
   { size: "90×200", category: "Односпальний" },
+  // Полуторні (2 розміри)
   { size: "120×190", category: "Полуторний" },
   { size: "120×200", category: "Полуторний" },
+  // Двоспальні (8 розмірів)
   { size: "140×190", category: "Двоспальний" },
   { size: "140×200", category: "Двоспальний" },
+  { size: "150×190", category: "Двоспальний" },
+  { size: "150×200", category: "Двоспальний" },
   { size: "160×190", category: "Двоспальний" },
   { size: "160×200", category: "Двоспальний" },
+  { size: "170×190", category: "Двоспальний" },
+  { size: "170×200", category: "Двоспальний" },
+  // King Size (2 розміри)
   { size: "180×190", category: "King Size" },
   { size: "180×200", category: "King Size" },
+  // King Size XL (1 розмір)
   { size: "200×200", category: "King Size XL" },
 ]
 
 // ===== ШАБЛОНИ =====
 
 const DESCRIPTION_TEMPLATES: Record<string, string> = {
-  independent_spring: `Матрац оптимальної жорсткості з ортопедичним ефектом. Основу моделі складає незалежний пружинний блок «Pocket Spring», який забезпечує індивідуальну підтримку кожної точки тіла. Модель має чудове співвідношення ціни та якості, забезпечуючи здоровий та міцний сон.`,
-  bonnel_spring: `Класичний пружинний матрац з блоком Bonnel. Надійна конструкція забезпечує рівномірну підтримку тіла під час сну. Ідеальний вибір для тих, хто цінує перевірені часом рішення за доступною ціною.`,
   springless: `Безпружинний матрац з сучасних матеріалів. Відсутність металевих елементів забезпечує безшумність та довговічність. Ідеально підходить для тих, хто цінує екологічні матеріали та природний комфорт.`,
+  independent_spring: `Матрац оптимальної жорсткості з ортопедичним ефектом. Основу моделі складає незалежний пружинний блок «Pocket Spring», який забезпечує індивідуальну підтримку кожної точки тіла. Модель має чудове співвідношення ціни та якості, забезпечуючи здоровий та міцний сон.`,
 }
 
 const CARE_TEMPLATE = `Виконувати глибоку чистку дозволяється тільки клінінговій компанії або хімчистці. Спеціалісти допоможуть зберегти м'якість та розміри виробу.
@@ -108,17 +136,18 @@ const CreateMattressPage = () => {
   // Характеристики
   const [height, setHeight] = useState(20)
   const [hardness, setHardness] = useState("H3")
-  const [blockType, setBlockType] = useState("independent_spring")
+  const [blockType, setBlockType] = useState("springless")
   const [coverType, setCoverType] = useState("removable")
   const [maxWeight, setMaxWeight] = useState(120)
   const [selectedFillers, setSelectedFillers] = useState<string[]>(["latex"])
+  const [productType, setProductType] = useState("springless")
   
   // Прапорці
   const [isNew, setIsNew] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
 
   // Опис (з шаблонів)
-  const [descriptionMain, setDescriptionMain] = useState(DESCRIPTION_TEMPLATES.independent_spring)
+  const [descriptionMain, setDescriptionMain] = useState(DESCRIPTION_TEMPLATES.springless)
   const [descriptionCare, setDescriptionCare] = useState(CARE_TEMPLATE)
 
   // Розміри та ціни
@@ -313,6 +342,7 @@ const CreateMattressPage = () => {
           cover_type: coverType,
           max_weight: maxWeight,
           fillers: selectedFillers,
+          product_type: productType,
           description_main: descriptionMain,
           description_care: descriptionCare,
           specs: generateSpecs(),
@@ -535,7 +565,23 @@ const CreateMattressPage = () => {
           <div className="px-6 py-4">
             <Heading level="h2" className="mb-4">Характеристики</Heading>
             
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div>
+                <Label>Тип товару *</Label>
+                <Select value={productType} onValueChange={setProductType}>
+                  <Select.Trigger>
+                    <Select.Value placeholder="Виберіть" />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {PRODUCT_TYPE_OPTIONS.map(opt => (
+                      <Select.Item key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select>
+              </div>
+
               <div>
                 <Label>Висота (см) *</Label>
                 <Input
@@ -546,7 +592,7 @@ const CreateMattressPage = () => {
                   onChange={(e) => setHeight(Number(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label>Жорсткість *</Label>
                 <Select value={hardness} onValueChange={setHardness}>
