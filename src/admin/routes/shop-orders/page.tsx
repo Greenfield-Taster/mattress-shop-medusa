@@ -402,16 +402,16 @@ const ShopOrdersPage = () => {
           onClick={() => setSelectedOrder(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto m-4"
+            className="bg-ui-bg-base rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b">
+            <div className="p-6 border-b border-ui-border-base">
               <div className="flex items-center justify-between">
                 <div>
                   <Heading level="h2">
                     Замовлення {selectedOrder.order_number}
                   </Heading>
-                  <Text className="text-gray-500">
+                  <Text className="text-ui-fg-subtle">
                     {formatDate(selectedOrder.created_at)}
                   </Text>
                 </div>
@@ -428,7 +428,7 @@ const ShopOrdersPage = () => {
                 <Heading level="h3" className="mb-2">
                   Клієнт
                 </Heading>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                <div className="bg-ui-bg-subtle rounded-lg p-4 space-y-1">
                   <Text>
                     <strong>ПІБ:</strong> {selectedOrder.full_name}
                   </Text>
@@ -446,7 +446,7 @@ const ShopOrdersPage = () => {
                 <Heading level="h3" className="mb-2">
                   Доставка
                 </Heading>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                <div className="bg-ui-bg-subtle rounded-lg p-4 space-y-1">
                   <Text>
                     <strong>Спосіб:</strong>{" "}
                     {DELIVERY_METHODS[selectedOrder.delivery_method] ||
@@ -471,9 +471,9 @@ const ShopOrdersPage = () => {
                 <Heading level="h3" className="mb-2">
                   Товари
                 </Heading>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border border-ui-border-base rounded-lg overflow-hidden">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-ui-bg-subtle">
                       <tr>
                         <th className="text-left p-3 text-sm font-medium">
                           Товар
@@ -491,12 +491,12 @@ const ShopOrdersPage = () => {
                     </thead>
                     <tbody>
                       {selectedOrder.items.map((item) => (
-                        <tr key={item.id} className="border-t">
+                        <tr key={item.id} className="border-t border-ui-border-base">
                           <td className="p-3">
                             <div>
                               <Text className="font-medium">{item.title}</Text>
                               {(item.size || item.firmness) && (
-                                <Text className="text-xs text-gray-500">
+                                <Text className="text-xs text-ui-fg-subtle">
                                   {[item.size, item.firmness]
                                     .filter(Boolean)
                                     .join(" • ")}
@@ -519,13 +519,13 @@ const ShopOrdersPage = () => {
               </div>
 
               {/* Підсумок */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-ui-bg-subtle rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <Text>Сума товарів:</Text>
                   <Text>{formatMoney(selectedOrder.subtotal)}</Text>
                 </div>
                 {selectedOrder.discount_amount > 0 && (
-                  <div className="flex justify-between mb-2 text-green-600">
+                  <div className="flex justify-between mb-2 text-ui-fg-interactive">
                     <Text>
                       Знижка
                       {selectedOrder.promo_code &&
@@ -535,17 +535,17 @@ const ShopOrdersPage = () => {
                     <Text>-{formatMoney(selectedOrder.discount_amount)}</Text>
                   </div>
                 )}
-                <div className="flex justify-between pt-2 border-t font-bold text-lg">
+                <div className="flex justify-between pt-2 border-t border-ui-border-base font-bold text-lg">
                   <Text>Разом:</Text>
                   <Text>{formatMoney(selectedOrder.total)}</Text>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t flex justify-end">
+            <div className="p-6 border-t border-ui-border-base flex justify-end">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                className="px-4 py-2 bg-ui-bg-subtle-hover rounded-lg hover:bg-ui-bg-subtle-pressed text-ui-fg-base"
               >
                 Закрити
               </button>
