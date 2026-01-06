@@ -31,8 +31,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // Спробуємо знайти замовлення
     let order
 
-    // Якщо id виглядає як номер замовлення (ORD-YYYY-XXXXX)
-    if (id.startsWith("ORD-")) {
+    // Визначаємо, чи це order_number чи внутрішній ID
+    // Внутрішній ID MedusaJS зазвичай починається з "01" (ULID формат)
+    // Номер замовлення - це 8-значне число або старий формат ORD-YYYY-XXXXX
+    const isOrderNumber = id.startsWith("ORD-") || /^\d{8}$/.test(id)
+
+    if (isOrderNumber) {
       order = await orderService.findByOrderNumber(id)
     } else {
       // Інакше шукаємо по ID
