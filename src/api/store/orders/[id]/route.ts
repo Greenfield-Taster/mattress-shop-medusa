@@ -119,16 +119,45 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           updated_at: order.updated_at,
         }
       : {
-          // Обмежена інформація для трекінгу
+          // Повна інформація для трекінгу (публічний доступ по номеру замовлення)
           id: order.id,
           order_number: order.order_number,
           status: order.status,
+          payment_status: order.payment_status,
+
+          // Контактні дані (для відображення отримувача)
+          contact_data: {
+            fullName: order.full_name,
+          },
+
+          // Доставка
           delivery_method: order.delivery_method,
           delivery_city: order.delivery_city,
+          delivery_address: order.delivery_address,
+          delivery_warehouse: order.delivery_warehouse,
+
+          // Суми
+          subtotal: Number(order.subtotal) / 100,
+          discount: Number(order.discount_amount) / 100,
           total: Number(order.total) / 100,
           currency: order.currency,
-          items_count: order.items.length,
+
+          // Товари
+          items: order.items.map((item) => ({
+            id: item.id,
+            product_id: item.product_id,
+            title: item.title,
+            image: item.image,
+            size: item.size,
+            firmness: item.firmness,
+            price: Number(item.unit_price) / 100,
+            quantity: item.quantity,
+            total: Number(item.total) / 100,
+          })),
+
+          // Дати
           created_at: order.created_at,
+          updated_at: order.updated_at,
         }
 
     return res.status(200).json({
