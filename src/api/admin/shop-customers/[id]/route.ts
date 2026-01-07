@@ -55,6 +55,10 @@ export async function PUT(
     const { id } = req.params
     const { first_name, last_name, email, phone, city, address, avatar, is_active } = req.body
 
+    // Нормалізуємо порожні рядки в null для унікальних полів
+    const normalizedEmail = email?.trim() || null
+    const normalizedPhone = phone?.trim() || null
+
     const customerService = req.scope.resolve<CustomerModuleService>(CUSTOMER_MODULE)
 
     // Перевіряємо чи існує користувач
@@ -67,8 +71,8 @@ export async function PUT(
     }
 
     // Якщо змінюється email, перевіряємо унікальність
-    if (email && email !== existingCustomer.email) {
-      const emailExists = await customerService.findByEmail(email)
+    if (normalizedEmail && normalizedEmail !== existingCustomer.email) {
+      const emailExists = await customerService.findByEmail(normalizedEmail)
       if (emailExists && emailExists.id !== id) {
         return res.status(400).json({
           message: "Цей email вже використовується іншим користувачем",
@@ -77,8 +81,8 @@ export async function PUT(
     }
 
     // Якщо змінюється телефон, перевіряємо унікальність
-    if (phone && phone !== existingCustomer.phone) {
-      const phoneExists = await customerService.findByPhone(phone)
+    if (normalizedPhone && normalizedPhone !== existingCustomer.phone) {
+      const phoneExists = await customerService.findByPhone(normalizedPhone)
       if (phoneExists && phoneExists.id !== id) {
         return res.status(400).json({
           message: "Цей телефон вже використовується іншим користувачем",
@@ -89,12 +93,12 @@ export async function PUT(
     // Оновлюємо
     const updatedCustomer = await customerService.updateCustomerData({
       id,
-      first_name: first_name ?? existingCustomer.first_name,
-      last_name: last_name ?? existingCustomer.last_name,
-      email: email ?? existingCustomer.email,
-      phone: phone ?? existingCustomer.phone,
-      city: city ?? existingCustomer.city,
-      address: address ?? existingCustomer.address,
+      first_name: first_name?.trim() || existingCustomer.first_name,
+      last_name: last_name?.trim() || existingCustomer.last_name,
+      email: normalizedEmail ?? existingCustomer.email,
+      phone: normalizedPhone ?? existingCustomer.phone,
+      city: city?.trim() || existingCustomer.city,
+      address: address?.trim() || existingCustomer.address,
       avatar: avatar ?? existingCustomer.avatar,
       is_active: is_active ?? existingCustomer.is_active,
     })
