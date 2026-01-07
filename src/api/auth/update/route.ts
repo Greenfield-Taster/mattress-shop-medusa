@@ -7,6 +7,7 @@ interface UpdateProfileRequestBody {
   firstName?: string
   lastName?: string
   email?: string
+  phone?: string
   city?: string
   address?: string
 }
@@ -45,10 +46,11 @@ export async function PUT(
       })
     }
 
-    const { firstName, lastName, email, city, address } = req.body
+    const { firstName, lastName, email, phone, city, address } = req.body
 
     // Нормалізуємо порожні рядки в null
     const normalizedEmail = email?.trim() || null
+    const normalizedPhone = phone?.trim() || null
     const normalizedCity = city?.trim() || null
     const normalizedAddress = address?.trim() || null
 
@@ -57,6 +59,14 @@ export async function PUT(
       return res.status(400).json({
         success: false,
         error: "Невірний формат email",
+      })
+    }
+
+    // Валідація телефону якщо передано
+    if (normalizedPhone && !isValidPhone(normalizedPhone)) {
+      return res.status(400).json({
+        success: false,
+        error: "Невірний формат номера телефону. Використовуйте формат 0XXXXXXXXX (10 цифр)",
       })
     }
 
@@ -84,12 +94,24 @@ export async function PUT(
       }
     }
 
+    // Перевіряємо унікальність телефону якщо він змінюється
+    if (normalizedPhone && normalizedPhone !== existingCustomer.phone) {
+      const phoneExists = await customerService.findByPhone(normalizedPhone)
+      if (phoneExists && phoneExists.id !== payload.userId) {
+        return res.status(400).json({
+          success: false,
+          error: "Цей номер телефону вже використовується іншим користувачем",
+        })
+      }
+    }
+
     // Оновлюємо профіль
     const updatedCustomer = await customerService.updateCustomerData({
       id: payload.userId,
       first_name: firstName?.trim() || existingCustomer.first_name,
       last_name: lastName?.trim() || existingCustomer.last_name,
       email: normalizedEmail ?? existingCustomer.email,
+      phone: normalizedPhone ?? existingCustomer.phone,
       city: normalizedCity ?? existingCustomer.city,
       address: normalizedAddress ?? existingCustomer.address,
     })
@@ -122,4 +144,21 @@ export async function PUT(
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
+}
+
+/**
+ * Валідація номеру телефону
+ * Підтримуються формати: 0XXXXXXXXX (10 цифр) або +380XXXXXXXXX (12 цифр)
+ */
+function isValidPhone(phone: string): boolean {
+  // Видаляємо пробіли та дефіси
+  const cleaned = phone.replace(/[\s-]/g, "")
+
+  // Формат 0XXXXXXXXX (10 цифр, починається з 0)
+  if (/^0\d{9}$/.test(cleaned)) return true
+
+  // Формат +380XXXXXXXXX або 380XXXXXXXXX
+  if (/^(\+?380)\d{9}$/.test(cleaned)) return true
+
+  return false
 }
