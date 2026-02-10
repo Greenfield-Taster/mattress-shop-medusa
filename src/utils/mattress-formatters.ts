@@ -71,15 +71,6 @@ export const FILLER_LABELS: Record<string, string> = {
   latex_foam: "Латексована піна",
 }
 
-export const PRODUCT_TYPE_LABELS: Record<string, string> = {
-  springless: "Безпружинні",
-  spring: "Пружинні",
-  children: "Дитячі",
-  topper: "Топери",
-  rolled: "Скручені",
-  accessories: "Аксесуари",
-}
-
 export const HARDNESS_LABELS: Record<string, string> = {
   H1: "Н1 (м'який)",
   H2: "Н2 (середній)",
@@ -131,23 +122,21 @@ export function normalizeSize(size: string): string {
 // ===== ФОРМАТУВАННЯ =====
 
 /**
- * Визначає тип матраца
+ * Визначає тип матраца (повертає сирий ключ)
  * Пріоритет: product_type (якщо задано) → fallback по block_type
  */
 export function getMattressType(blockType: string | undefined, productType?: string | null): string {
-  // Якщо product_type задано — використовуємо його
-  if (productType && PRODUCT_TYPE_LABELS[productType]) {
-    return PRODUCT_TYPE_LABELS[productType]
+  if (productType) {
+    return productType
   }
-  // Fallback по block_type
   switch (blockType) {
     case "independent_spring":
     case "bonnel_spring":
-      return "Пружинні"
+      return "spring"
     case "springless":
-      return "Безпружинні"
+      return "springless"
     default:
-      return "Безпружинні"
+      return "springless"
   }
 }
 
