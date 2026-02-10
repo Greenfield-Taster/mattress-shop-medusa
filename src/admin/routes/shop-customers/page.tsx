@@ -24,7 +24,6 @@ interface ShopCustomer {
   email: string | null
   first_name: string | null
   last_name: string | null
-  avatar: string | null
   city: string | null
   address: string | null
   google_id: string | null
@@ -220,20 +219,12 @@ const ShopCustomersPage = () => {
               <Table.Body>
                 {filteredCustomers.map((customer) => (
                   <Table.Row key={customer.id} className="hover:bg-gray-50">
-                    {/* Avatar */}
+                    {/* Avatar placeholder */}
                     <Table.Cell>
                       <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden">
-                        {customer.avatar ? (
-                          <img
-                            src={customer.avatar}
-                            alt={customer.first_name || "Avatar"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">
-                            👤
-                          </div>
-                        )}
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">
+                          👤
+                        </div>
                       </div>
                     </Table.Cell>
 

@@ -22,7 +22,6 @@ interface ShopCustomer {
   email: string | null
   first_name: string | null
   last_name: string | null
-  avatar: string | null
   city: string | null
   address: string | null
   google_id: string | null
@@ -39,7 +38,6 @@ interface FormData {
   phone: string
   city: string
   address: string
-  avatar: string
   is_active: boolean
 }
 
@@ -55,7 +53,6 @@ const EditCustomerPage = () => {
     phone: "",
     city: "",
     address: "",
-    avatar: "",
     is_active: true,
   })
 
@@ -88,7 +85,6 @@ const EditCustomerPage = () => {
         phone: c.phone || "",
         city: c.city || "",
         address: c.address || "",
-        avatar: c.avatar || "",
         is_active: c.is_active,
       })
     }
@@ -191,32 +187,12 @@ const EditCustomerPage = () => {
       <Container className="divide-y p-0">
         <form onSubmit={handleSubmit}>
           <div className="px-6 py-4 space-y-6">
-            {/* Avatar preview */}
+            {/* Avatar placeholder */}
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
-                {formData.avatar ? (
-                  <img
-                    src={formData.avatar}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = ""
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
-                    👤
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="avatar">URL аватара</Label>
-                <Input
-                  id="avatar"
-                  value={formData.avatar}
-                  onChange={(e) => handleChange("avatar", e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                />
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
+                  👤
+                </div>
               </div>
             </div>
 

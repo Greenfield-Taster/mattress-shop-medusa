@@ -9,7 +9,6 @@ interface UpdateCustomerBody {
   phone?: string
   city?: string
   address?: string
-  avatar?: string
   is_active?: boolean
 }
 
@@ -53,7 +52,7 @@ export async function PUT(
 ) {
   try {
     const { id } = req.params
-    const { first_name, last_name, email, phone, city, address, avatar, is_active } = req.body
+    const { first_name, last_name, email, phone, city, address, is_active } = req.body
 
     // Нормалізуємо порожні рядки в null для унікальних полів
     const normalizedEmail = email?.trim() || null
@@ -99,7 +98,6 @@ export async function PUT(
       phone: normalizedPhone ?? existingCustomer.phone,
       city: city?.trim() || existingCustomer.city,
       address: address?.trim() || existingCustomer.address,
-      avatar: avatar ?? existingCustomer.avatar,
       is_active: is_active ?? existingCustomer.is_active,
     })
 
