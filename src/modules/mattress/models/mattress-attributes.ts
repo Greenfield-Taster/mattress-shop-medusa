@@ -61,6 +61,9 @@ export const MattressAttributes = model.define("mattress_attributes", {
   
   /** Відсоток знижки (0-100) */
   discount_percent: model.number().default(0),
+
+  /** Тип товару (пружинні, безпружинні, дитячі, тощо) */
+  product_type: model.text().nullable(),
 })
 
 export default MattressAttributes

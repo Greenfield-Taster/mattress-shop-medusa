@@ -22,6 +22,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     cover_type,
     max_weight,
     fillers,
+    product_type,
     description_main,
     description_care,
     specs,
@@ -98,6 +99,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       specs: specs || [],
       is_new: is_new || false,
       discount_percent: discount_percent || 0,
+      product_type: product_type || null,
     })
 
     // 5. Створюємо link між Product та MattressAttributes

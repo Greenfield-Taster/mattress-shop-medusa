@@ -83,6 +83,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     cover_type,
     max_weight,
     fillers,
+    product_type,
     description_main,
     description_care,
     specs,
@@ -192,6 +193,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       if (cover_type) updateData.cover_type = cover_type
       if (max_weight !== undefined) updateData.max_weight = max_weight
       if (fillers) updateData.fillers = fillers
+      if (product_type !== undefined) updateData.product_type = product_type
       if (description_main !== undefined)
         updateData.description_main = description_main
       if (description_care !== undefined)

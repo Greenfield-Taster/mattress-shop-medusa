@@ -14,7 +14,7 @@ export type MattressAttributesType = InferTypeOf<typeof MattressAttributes>
  */
 export interface CreateMattressAttributesDTO {
   height: number
-  hardness: "H1" | "H2" | "H3" | "H4"
+  hardness: "H1" | "H2" | "H3" | "H4" | "H5"
   block_type: "independent_spring" | "bonnel_spring" | "springless"
   cover_type: "removable" | "non_removable"
   max_weight: number
@@ -24,6 +24,7 @@ export interface CreateMattressAttributesDTO {
   specs?: string[] | null
   is_new?: boolean
   discount_percent?: number
+  product_type?: string | null
 }
 
 /**
@@ -32,7 +33,7 @@ export interface CreateMattressAttributesDTO {
 export interface UpdateMattressAttributesDTO {
   id: string
   height?: number
-  hardness?: "H1" | "H2" | "H3" | "H4"
+  hardness?: "H1" | "H2" | "H3" | "H4" | "H5"
   block_type?: "independent_spring" | "bonnel_spring" | "springless"
   cover_type?: "removable" | "non_removable"
   max_weight?: number
@@ -42,6 +43,7 @@ export interface UpdateMattressAttributesDTO {
   specs?: string[] | null
   is_new?: boolean
   discount_percent?: number
+  product_type?: string | null
 }
 
 /**
