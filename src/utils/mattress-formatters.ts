@@ -157,23 +157,26 @@ export function formatCoverType(type: string | undefined): string {
 }
 
 /**
- * Форматує наповнювачі для українського UI
+ * Витягує наповнювачі як масив сирих ключів (без перекладу)
  * Підтримує як масив, так і Record (JSON з бази даних)
  */
-export function formatFillers(fillers: string[] | Record<string, unknown> | undefined): string[] {
+export function extractFillers(fillers: string[] | Record<string, unknown> | undefined): string[] {
   if (!fillers) return []
-  // Якщо це масив - працюємо з ним напряму
-  if (Array.isArray(fillers)) {
-    return fillers.map(f => FILLER_LABELS[f] || f)
-  }
-  // Якщо це Record (з JSON поля) - спробуємо витягти значення
+  if (Array.isArray(fillers)) return fillers
   if (typeof fillers === 'object') {
     const values = Object.values(fillers)
     if (values.every(v => typeof v === 'string')) {
-      return values.map(f => FILLER_LABELS[f as string] || f) as string[]
+      return values as string[]
     }
   }
   return []
+}
+
+/**
+ * Форматує наповнювачі для українського UI (використовується в admin)
+ */
+export function formatFillers(fillers: string[] | Record<string, unknown> | undefined): string[] {
+  return extractFillers(fillers).map(f => FILLER_LABELS[f] || f)
 }
 
 /**
@@ -322,14 +325,13 @@ export function formatProductForStore(product: ProductWithAttributes): object {
     // Тип матраца (для фільтрації)
     type: getMattressType(attrs?.block_type, attrs?.product_type),
 
-    // Атрибути матраца
+    // Атрибути матраца (сирі ключі — фронтенд перекладає)
     height: attrs?.height,
     hardness: attrs?.hardness,
-    blockType: formatBlockType(attrs?.block_type),
-    coverType: formatCoverType(attrs?.cover_type),
-    cover: formatCoverType(attrs?.cover_type), // Alias
+    blockType: attrs?.block_type || "",
+    coverType: attrs?.cover_type || "",
     maxWeight: attrs?.max_weight,
-    fillers: formatFillers(attrs?.fillers),
+    fillers: extractFillers(attrs?.fillers),
     isNew: attrs?.is_new || false,
     discount: discountPercent,
     discountPercent: discountPercent,

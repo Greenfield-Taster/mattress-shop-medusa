@@ -2,9 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import {
   getMattressType,
-  formatBlockType,
-  formatCoverType,
-  formatFillers,
+  extractFillers,
   getMinPrice,
   sortMattresses,
   formatProductForStore,
@@ -22,9 +20,9 @@ import {
  * - types[]     - типи матраців ("Пружинні", "Безпружинні", "Дитячі", "Топери", "Скручені")
  * - sizes[]     - розміри ("160×200", "140×200", ...)
  * - hardness[]  - жорсткість ("H1", "H2", "H3", "H4", "H5")
- * - blockTypes[] - тип блоку ("Незалежний пружинний блок", "Безпружинний", ...)
- * - fillers[]   - наповнювачі ("Латекс", "Піна з пам'яттю", ...)
- * - covers[]    - тип чохла ("Знімний", "Незнімний")
+ * - blockTypes[] - тип блоку ("independent_spring", "bonnel_spring", "springless")
+ * - fillers[]   - наповнювачі ("latex", "memory_foam", "coconut", "latex_foam")
+ * - covers[]    - тип чохла ("removable", "non_removable")
  * - height      - діапазон висоти ("3-45")
  * - maxWeight   - максимальне навантаження ("<=250")
  * - price       - діапазон цін ("0-50000")
@@ -146,27 +144,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }
     }
 
-    // Фільтр по типу блоку
+    // Фільтр по типу блоку (raw keys: independent_spring, bonnel_spring, springless)
     if (blockTypesArr.length > 0) {
       mattresses = mattresses.filter((m) => {
-        const blockType = formatBlockType(m.mattress_attributes?.block_type)
-        return blockTypesArr.includes(blockType)
+        const blockType = m.mattress_attributes?.block_type
+        return blockType !== undefined && blockTypesArr.includes(blockType)
       })
     }
 
-    // Фільтр по наповнювачах
+    // Фільтр по наповнювачах (raw keys: latex, memory_foam, coconut, latex_foam)
     if (fillersArr.length > 0) {
       mattresses = mattresses.filter((m) => {
-        const productFillers = formatFillers(m.mattress_attributes?.fillers)
+        const productFillers = extractFillers(m.mattress_attributes?.fillers)
         return fillersArr.some((filler) => productFillers.includes(filler))
       })
     }
 
-    // Фільтр по чохлу
+    // Фільтр по чохлу (raw keys: removable, non_removable)
     if (coversArr.length > 0) {
       mattresses = mattresses.filter((m) => {
-        const coverType = formatCoverType(m.mattress_attributes?.cover_type)
-        return coversArr.includes(coverType)
+        const coverType = m.mattress_attributes?.cover_type
+        return coverType !== undefined && coversArr.includes(coverType)
       })
     }
 

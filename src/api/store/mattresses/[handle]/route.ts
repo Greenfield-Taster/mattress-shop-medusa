@@ -2,9 +2,6 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import {
   getMattressType,
-  formatBlockType,
-  formatCoverType,
-  formatFillers,
   getMinPrice,
   calculateDiscountedPrice,
   groupVariantsByCategory,
@@ -72,16 +69,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       // Тип матраца (для фільтрації схожих)
       type: getMattressType(attrs.block_type, attrs.product_type),
 
-      // Атрибути матраца
+      // Атрибути матраца (сирі ключі — фронтенд перекладає)
       height: attrs.height,
       hardness: attrs.hardness,
-      blockType: formatBlockType(attrs.block_type),
-      blockTypeRaw: attrs.block_type,
-      coverType: formatCoverType(attrs.cover_type),
-      coverTypeRaw: attrs.cover_type,
+      blockType: attrs.block_type || "",
+      coverType: attrs.cover_type || "",
       maxWeight: attrs.max_weight,
-      fillers: formatFillers(fillersList),
-      fillersRaw: fillersList,
+      fillers: fillersList,
       isNew: attrs.is_new,
       discountPercent: discountPercent,
 
