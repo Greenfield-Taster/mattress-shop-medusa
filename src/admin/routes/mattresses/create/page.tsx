@@ -31,6 +31,7 @@ const HARDNESS_OPTIONS = [
 const BLOCK_TYPE_OPTIONS = [
   { value: "springless", label: "Безпружинний" },
   { value: "independent_spring", label: "Незалежний пружинний блок" },
+  { value: "bonnel_spring", label: "Залежний пружинний блок (Bonnel)" },
 ]
 
 // Синхронізовано з фронтендом (Catalog.jsx filterOptions.types)

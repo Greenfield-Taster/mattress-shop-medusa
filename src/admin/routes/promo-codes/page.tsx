@@ -6,6 +6,8 @@ import {
   Table,
   Badge,
   Text,
+  Input,
+  Select,
   DropdownMenu,
   IconButton,
   toast,
@@ -19,7 +21,9 @@ import {
   EllipsisHorizontal,
   PencilSquare,
   Trash,
+  MagnifyingGlass,
 } from "@medusajs/icons"
+import { useState } from "react"
 
 // Типи
 interface PromoCode {
@@ -94,6 +98,8 @@ const PromoCodesPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const prompt = usePrompt()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filterActive, setFilterActive] = useState<string>("")
 
   // Запит на отримання списку промокодів
   const { data, isLoading, error, refetch } = useQuery({
@@ -164,6 +170,20 @@ const PromoCodesPage = () => {
 
   const promoCodes: PromoCode[] = data?.promo_codes || []
 
+  // Фільтрація промокодів
+  const filteredPromoCodes = promoCodes.filter((pc) => {
+    if (searchQuery) {
+      const search = searchQuery.toLowerCase()
+      if (!pc.code.toLowerCase().includes(search) &&
+          !pc.description?.toLowerCase().includes(search)) {
+        return false
+      }
+    }
+    if (filterActive === "active" && !pc.is_active) return false
+    if (filterActive === "inactive" && pc.is_active) return false
+    return true
+  })
+
   // Видалення промокоду
   const handleDelete = async (id: string, code: string) => {
     const confirmed = await prompt({
@@ -198,6 +218,34 @@ const PromoCodesPage = () => {
         </div>
       </Container>
 
+      {/* Search & Filter */}
+      <Container className="p-0">
+        <div className="px-6 py-4 flex items-center gap-4">
+          <div className="relative max-w-md flex-1">
+            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Пошук за кодом або описом..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select
+            value={filterActive || "all"}
+            onValueChange={(value) => setFilterActive(value === "all" ? "" : value)}
+          >
+            <Select.Trigger className="w-48">
+              <Select.Value placeholder="Всі статуси" />
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="all">Всі статуси</Select.Item>
+              <Select.Item value="active">Активні</Select.Item>
+              <Select.Item value="inactive">Неактивні</Select.Item>
+            </Select.Content>
+          </Select>
+        </div>
+      </Container>
+
       {/* Content */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
@@ -214,7 +262,7 @@ const PromoCodesPage = () => {
                 Спробувати знову
               </Button>
             </div>
-          ) : promoCodes.length === 0 ? (
+          ) : filteredPromoCodes.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🏷️</div>
               <Heading level="h2" className="mb-2">
@@ -243,7 +291,7 @@ const PromoCodesPage = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {promoCodes.map((promoCode) => (
+                {filteredPromoCodes.map((promoCode) => (
                   <Table.Row
                     key={promoCode.id}
                     className="cursor-pointer hover:bg-gray-50"

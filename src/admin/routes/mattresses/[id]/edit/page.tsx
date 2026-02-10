@@ -33,6 +33,16 @@ const BLOCK_TYPE_OPTIONS = [
   { value: "springless", label: "Безпружинний" },
 ]
 
+// Синхронізовано з фронтендом (Catalog.jsx filterOptions.types)
+const PRODUCT_TYPE_OPTIONS = [
+  { value: "springless", label: "Безпружинні" },
+  { value: "spring", label: "Пружинні" },
+  { value: "children", label: "Дитячі" },
+  { value: "topper", label: "Топери" },
+  { value: "rolled", label: "Скручені" },
+  { value: "accessories", label: "Аксесуари" },
+]
+
 const COVER_TYPE_OPTIONS = [
   { value: "removable", label: "Знімний" },
   { value: "non_removable", label: "Незнімний" },
@@ -43,8 +53,6 @@ const FILLER_OPTIONS = [
   { value: "memory_foam", label: "Піна з пам'яттю" },
   { value: "coconut", label: "Кокосове волокно" },
   { value: "latex_foam", label: "Латексована піна" },
-  { value: "felt", label: "Войлок" },
-  { value: "polyurethane", label: "Пінополіуретан" },
 ]
 
 const STATUS_OPTIONS = [
@@ -91,6 +99,7 @@ const EditMattressPage = () => {
   const [coverType, setCoverType] = useState("removable")
   const [maxWeight, setMaxWeight] = useState(120)
   const [selectedFillers, setSelectedFillers] = useState<string[]>([])
+  const [productType, setProductType] = useState("springless")
   const [isNew, setIsNew] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [descriptionMain, setDescriptionMain] = useState("")
@@ -145,6 +154,7 @@ const EditMattressPage = () => {
         setCoverType(m.mattress_attributes.cover_type || "removable")
         setMaxWeight(m.mattress_attributes.max_weight || 120)
         setSelectedFillers(m.mattress_attributes.fillers || [])
+        setProductType(m.mattress_attributes.product_type || "springless")
         setIsNew(m.mattress_attributes.is_new || false)
         setDiscountPercent(m.mattress_attributes.discount_percent || 0)
         setDescriptionMain(m.mattress_attributes.description_main || "")
@@ -157,6 +167,7 @@ const EditMattressPage = () => {
         setCoverType("removable")
         setMaxWeight(120)
         setSelectedFillers([])
+        setProductType("springless")
         setIsNew(false)
         setDiscountPercent(0)
         setDescriptionMain("")
@@ -327,6 +338,7 @@ const EditMattressPage = () => {
       cover_type: coverType,
       max_weight: maxWeight,
       fillers: selectedFillers,
+      product_type: productType,
       is_new: isNew,
       discount_percent: discountPercent,
       description_main: descriptionMain,
@@ -531,7 +543,23 @@ const EditMattressPage = () => {
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Характеристики</Heading>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div>
+              <Label>Тип товару</Label>
+              <Select value={productType} onValueChange={setProductType}>
+                <Select.Trigger>
+                  <Select.Value placeholder="Виберіть" />
+                </Select.Trigger>
+                <Select.Content>
+                  {PRODUCT_TYPE_OPTIONS.map(opt => (
+                    <Select.Item key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+            </div>
+
             <div>
               <Label>Висота (см)</Label>
               <Input

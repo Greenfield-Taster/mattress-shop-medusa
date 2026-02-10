@@ -41,8 +41,6 @@ const FILLER_OPTIONS = [
   { value: "memory_foam", label: "Піна з пам'яттю" },
   { value: "coconut", label: "Кокосове волокно" },
   { value: "latex_foam", label: "Латексована піна" },
-  { value: "felt", label: "Войлок" },
-  { value: "polyurethane", label: "Пінополіуретан" },
 ]
 
 interface MattressAttributes {

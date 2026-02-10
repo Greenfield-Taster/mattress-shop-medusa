@@ -68,10 +68,6 @@ export const FILLER_LABELS: Record<string, string> = {
   memory_foam: "Піна з пам'яттю",
   coconut: "Кокосове полотно",
   latex_foam: "Латексована піна",
-  felt: "Войлок",
-  polyurethane: "Пінополіуретан",
-  horsehair: "Кінський волос",
-  cotton: "Бавовна",
 }
 
 export const HARDNESS_LABELS: Record<string, string> = {

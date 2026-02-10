@@ -1,11 +1,12 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { 
-  Container, 
-  Heading, 
-  Button, 
-  Table, 
-  Badge, 
+import {
+  Container,
+  Heading,
+  Button,
+  Table,
+  Badge,
   Text,
+  Input,
   DropdownMenu,
   IconButton,
   toast,
@@ -14,7 +15,8 @@ import {
 } from "@medusajs/ui"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
-import { PlusMini, EllipsisHorizontal, PencilSquare, Trash, Eye } from "@medusajs/icons"
+import { PlusMini, EllipsisHorizontal, PencilSquare, Trash, Eye, MagnifyingGlass } from "@medusajs/icons"
+import { useState } from "react"
 
 // Типи
 interface MattressAttributes {
@@ -86,6 +88,7 @@ const MattressesPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const prompt = usePrompt()
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Запит на отримання списку матраців
   const { data, isLoading, error, refetch } = useQuery({
@@ -130,6 +133,16 @@ const MattressesPage = () => {
 
   const mattresses: Mattress[] = data?.mattresses || []
 
+  // Фільтрація матраців
+  const filteredMattresses = mattresses.filter((m) => {
+    if (!searchQuery) return true
+    const search = searchQuery.toLowerCase()
+    return (
+      m.title.toLowerCase().includes(search) ||
+      m.handle.toLowerCase().includes(search)
+    )
+  })
+
   // Видалення матраца
   const handleDelete = async (id: string, title: string) => {
     const confirmed = await prompt({
@@ -167,6 +180,21 @@ const MattressesPage = () => {
         </div>
       </Container>
 
+      {/* Search */}
+      <Container className="p-0">
+        <div className="px-6 py-4">
+          <div className="relative max-w-md">
+            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Пошук за назвою..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+      </Container>
+
       {/* Content */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
@@ -183,7 +211,7 @@ const MattressesPage = () => {
                 Спробувати знову
               </Button>
             </div>
-          ) : mattresses.length === 0 ? (
+          ) : filteredMattresses.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🛏️</div>
               <Heading level="h2" className="mb-2">Матраців поки немає</Heading>
@@ -213,7 +241,7 @@ const MattressesPage = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {mattresses.map((mattress) => (
+                {filteredMattresses.map((mattress) => (
                   <Table.Row 
                     key={mattress.id}
                     className="cursor-pointer hover:bg-gray-50"

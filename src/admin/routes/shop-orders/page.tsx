@@ -5,6 +5,7 @@ import {
   Table,
   Badge,
   Text,
+  Input,
   DropdownMenu,
   IconButton,
   toast,
@@ -19,6 +20,7 @@ import {
   XCircle,
   Clock,
   TruckFast,
+  MagnifyingGlass,
 } from "@medusajs/icons"
 import { useState } from "react"
 
@@ -128,6 +130,7 @@ const ShopOrdersPage = () => {
   const queryClient = useQueryClient()
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Запит на отримання замовлень
   const { data, isLoading, error, refetch } = useQuery({
@@ -183,6 +186,17 @@ const ShopOrdersPage = () => {
 
   const orders: Order[] = data?.orders || []
 
+  // Фільтрація замовлень (клієнтська)
+  const filteredOrders = orders.filter((order) => {
+    if (!searchQuery) return true
+    const search = searchQuery.toLowerCase()
+    return (
+      order.order_number.toLowerCase().includes(search) ||
+      order.full_name.toLowerCase().includes(search) ||
+      order.phone.includes(search)
+    )
+  })
+
   return (
     <div className="flex flex-col gap-y-4">
       <Toaster />
@@ -197,8 +211,17 @@ const ShopOrdersPage = () => {
             </Text>
           </div>
 
-          {/* Фільтр по статусу */}
+          {/* Пошук та фільтр */}
           <div className="flex items-center gap-4">
+            <div className="relative">
+              <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Номер, ім'я або телефон..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
             <Select
               value={filterStatus || "all"}
               onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}
@@ -233,7 +256,7 @@ const ShopOrdersPage = () => {
                 Спробувати знову
               </button>
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
               <Heading level="h2" className="mb-2">
@@ -259,7 +282,7 @@ const ShopOrdersPage = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <Table.Row
                     key={order.id}
                     className="cursor-pointer hover:bg-gray-50"

@@ -31,11 +31,12 @@ const CreateMattressSchema = z.object({
 
   // Атрибути матраца
   height: z.number().min(3).max(50),
-  hardness: z.enum(["H1", "H2", "H3", "H4"]),
+  hardness: z.enum(["H1", "H2", "H3", "H4", "H5"]),
   block_type: z.enum(["independent_spring", "bonnel_spring", "springless"]),
   cover_type: z.enum(["removable", "non_removable"]),
   max_weight: z.number().min(30).max(250),
   fillers: z.array(z.string()).optional(),
+  product_type: z.string().optional(),
 
   // Опис
   description_main: z.string().optional(),
@@ -62,11 +63,12 @@ const UpdateMattressSchema = z.object({
   status: z.enum(["draft", "published"]).optional(),
   images: z.array(z.string()).optional(),
   height: z.number().min(3).max(50).optional(),
-  hardness: z.enum(["H1", "H2", "H3", "H4"]).optional(),
+  hardness: z.enum(["H1", "H2", "H3", "H4", "H5"]).optional(),
   block_type: z.enum(["independent_spring", "bonnel_spring", "springless"]).optional(),
   cover_type: z.enum(["removable", "non_removable"]).optional(),
   max_weight: z.number().min(30).max(250).optional(),
   fillers: z.array(z.string()).optional(),
+  product_type: z.string().optional(),
   description_main: z.string().optional(),
   description_care: z.string().optional(),
   specs: z.array(z.string()).optional(),
