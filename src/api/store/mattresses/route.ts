@@ -101,10 +101,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     // ===== ФІЛЬТРАЦІЯ =====
 
-    // Фільтр по типу матраца (на основі block_type)
+    // Фільтр по типу матраца (product_type з fallback на block_type)
     if (typesArr.length > 0) {
       mattresses = mattresses.filter((m) => {
-        const type = getMattressType(m.mattress_attributes?.block_type)
+        const type = getMattressType(m.mattress_attributes?.block_type, m.mattress_attributes?.product_type)
         return typesArr.includes(type)
       })
     }

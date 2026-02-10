@@ -36,6 +36,7 @@ export interface MattressAttributesData {
   specs?: string[] | Record<string, unknown>
   is_new?: boolean
   discount_percent?: number
+  product_type?: string | null
 }
 
 export interface ProductWithAttributes {
@@ -68,6 +69,15 @@ export const FILLER_LABELS: Record<string, string> = {
   memory_foam: "Піна з пам'яттю",
   coconut: "Кокосове полотно",
   latex_foam: "Латексована піна",
+}
+
+export const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  springless: "Безпружинні",
+  spring: "Пружинні",
+  children: "Дитячі",
+  topper: "Топери",
+  rolled: "Скручені",
+  accessories: "Аксесуари",
 }
 
 export const HARDNESS_LABELS: Record<string, string> = {
@@ -121,9 +131,15 @@ export function normalizeSize(size: string): string {
 // ===== ФОРМАТУВАННЯ =====
 
 /**
- * Визначає тип матраца на основі block_type
+ * Визначає тип матраца
+ * Пріоритет: product_type (якщо задано) → fallback по block_type
  */
-export function getMattressType(blockType: string | undefined): string {
+export function getMattressType(blockType: string | undefined, productType?: string | null): string {
+  // Якщо product_type задано — використовуємо його
+  if (productType && PRODUCT_TYPE_LABELS[productType]) {
+    return PRODUCT_TYPE_LABELS[productType]
+  }
+  // Fallback по block_type
   switch (blockType) {
     case "independent_spring":
     case "bonnel_spring":
@@ -315,7 +331,7 @@ export function formatProductForStore(product: ProductWithAttributes): object {
     images: product.images?.map(img => img.url) || [],
 
     // Тип матраца (для фільтрації)
-    type: getMattressType(attrs?.block_type),
+    type: getMattressType(attrs?.block_type, attrs?.product_type),
 
     // Атрибути матраца
     height: attrs?.height,

@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import {
+  getMattressType,
   formatBlockType,
   formatCoverType,
   formatFillers,
@@ -64,7 +65,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       title: product.title,
       handle: product.handle,
       thumbnail: product.thumbnail,
+      name: product.title, // Alias для сумісності з фронтендом
+      image: product.thumbnail, // Alias для сумісності з фронтендом
       images: product.images?.map((img) => img.url) || [],
+
+      // Тип матраца (для фільтрації схожих)
+      type: getMattressType(attrs.block_type, attrs.product_type),
 
       // Атрибути матраца
       height: attrs.height,
