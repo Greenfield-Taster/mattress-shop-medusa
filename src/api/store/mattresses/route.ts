@@ -97,6 +97,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       (p) => p.mattress_attributes
     )
 
+    // Глобальна максимальна ціна (до фільтрації) для динамічного слайдера
+    const globalMaxPrice = Math.max(
+      ...mattresses.map((m) => getMinPrice(m.variants)),
+      0
+    )
+
     // ===== ФІЛЬТРАЦІЯ =====
 
     // Фільтр по типу матраца (product_type з fallback на block_type)
@@ -220,6 +226,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       total,
       page: pageNum,
       limit: limitNum,
+      maxPrice: globalMaxPrice,
     })
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
