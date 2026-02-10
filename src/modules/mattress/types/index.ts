@@ -6,6 +6,7 @@ export const HARDNESS_OPTIONS = {
   H2: { value: "H2", label: "H2 (нижче середньої)" },
   H3: { value: "H3", label: "H3 (середня)" },
   H4: { value: "H4", label: "H4 (жорсткий)" },
+  H5: { value: "H5", label: "H5 (дуже жорсткий)" },
 } as const
 
 export type HardnessType = keyof typeof HARDNESS_OPTIONS

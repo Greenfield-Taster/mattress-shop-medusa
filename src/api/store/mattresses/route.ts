@@ -21,6 +21,7 @@ import {
  * Query параметри:
  * - types[]     - типи матраців ("Пружинні", "Безпружинні", "Дитячі", "Топери", "Скручені")
  * - sizes[]     - розміри ("160×200", "140×200", ...)
+ * - hardness[]  - жорсткість ("H1", "H2", "H3", "H4", "H5")
  * - blockTypes[] - тип блоку ("Незалежний пружинний блок", "Безпружинний", ...)
  * - fillers[]   - наповнювачі ("Латекс", "Піна з пам'яттю", ...)
  * - covers[]    - тип чохла ("Знімний", "Незнімний")
@@ -41,6 +42,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     sort = "default",
     types,
     sizes,
+    hardness,
     blockTypes,
     fillers,
     covers,
@@ -58,6 +60,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const typesArr = parseArrayParam(types)
   const sizesArr = parseArrayParam(sizes)
+  const hardnessArr = parseArrayParam(hardness)
   const blockTypesArr = parseArrayParam(blockTypes)
   const fillersArr = parseArrayParam(fillers)
   const coversArr = parseArrayParam(covers)
@@ -103,6 +106,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       mattresses = mattresses.filter((m) => {
         const type = getMattressType(m.mattress_attributes?.block_type)
         return typesArr.includes(type)
+      })
+    }
+
+    // Фільтр по жорсткості
+    if (hardnessArr.length > 0) {
+      mattresses = mattresses.filter((m) => {
+        const h = m.mattress_attributes?.hardness
+        return h !== undefined && hardnessArr.includes(h)
       })
     }
 

@@ -13,8 +13,8 @@ export const MattressAttributes = model.define("mattress_attributes", {
   /** Висота матраца в см (3-30) */
   height: model.number(),
   
-  /** Жорсткість: H1 (м'який), H2, H3, H4 (жорсткий) */
-  hardness: model.enum(["H1", "H2", "H3", "H4"]),
+  /** Жорсткість: H1 (м'який), H2, H3, H4 (жорсткий), H5 (дуже жорсткий) */
+  hardness: model.enum(["H1", "H2", "H3", "H4", "H5"]),
   
   /** Тип блоку */
   block_type: model.enum([

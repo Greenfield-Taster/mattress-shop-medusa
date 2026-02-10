@@ -22,6 +22,7 @@ const HARDNESS_OPTIONS = [
   { value: "H2", label: "H2 (нижче середньої)" },
   { value: "H3", label: "H3 (середня)" },
   { value: "H4", label: "H4 (жорсткий)" },
+  { value: "H5", label: "H5 (дуже жорсткий)" },
 ]
 
 const BLOCK_TYPE_OPTIONS = [
