@@ -6,6 +6,7 @@ import type CustomerModuleService from "../../../modules/customer/service"
 import { PROMO_CODE_MODULE } from "../../../modules/promo-code"
 import type PromoCodeModuleService from "../../../modules/promo-code/service"
 import { extractBearerToken, verifyToken } from "../../../utils/jwt"
+import { normalizePhoneNumber } from "../../../services/sms"
 
 // Вимикаємо вбудовану авторизацію MedusaJS - використовуємо власну JWT авторизацію
 export const AUTHENTICATE = false
@@ -162,13 +163,8 @@ export async function POST(
 
     if (!customerId && body.contactData.createAccount) {
       try {
-        // Нормалізуємо телефон
-        const phone = body.contactData.phone.replace(/\D/g, "")
-        const normalizedPhone = phone.startsWith("380")
-          ? `+${phone}`
-          : phone.startsWith("0")
-            ? `+38${phone}`
-            : `+380${phone}`
+        // Нормалізуємо телефон до формату 0XXXXXXXXX
+        const normalizedPhone = normalizePhoneNumber(body.contactData.phone)
 
         // Перевіряємо чи не існує вже
         let customer = await customerService.findByPhone(normalizedPhone)
@@ -216,7 +212,7 @@ export async function POST(
     const orderData = {
       customer_id: customerId,
       full_name: body.contactData.fullName.trim(),
-      phone: body.contactData.phone,
+      phone: normalizePhoneNumber(body.contactData.phone),
       email: body.contactData.email.toLowerCase().trim(),
       comment: body.contactData.comment || null,
 
