@@ -86,11 +86,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         specs: attrs.specs || [],
       },
 
-      // Варіанти (розміри з цінами) - згруповані по категоріях
-      variants: groupVariantsByCategory(product.variants),
+      // Варіанти згруповані по категоріях розмірів
+      variantsByCategory: groupVariantsByCategory(product.variants),
 
-      // Всі варіанти плоским списком
-      allVariants:
+      // Варіанти плоским списком (сумісний формат з list endpoint)
+      variants:
         product.variants?.map((v) => {
           const priceArray = v.prices || v.price_set?.prices
           const variantBasePrice = priceArray?.[0]?.amount || 0
