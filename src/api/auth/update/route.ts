@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CUSTOMER_MODULE } from "../../../modules/customer"
 import type CustomerModuleService from "../../../modules/customer/service"
 import { extractBearerToken, verifyToken } from "../../../utils/jwt"
+import { normalizePhoneNumber } from "../../../services/sms"
 
 interface UpdateProfileRequestBody {
   firstName?: string
@@ -50,7 +51,7 @@ export async function PUT(
 
     // Нормалізуємо порожні рядки в null
     const normalizedEmail = email?.trim() || null
-    const normalizedPhone = phone?.trim() || null
+    const normalizedPhone = phone ? normalizePhoneNumber(phone) : null
     const normalizedCity = city?.trim() || null
     const normalizedAddress = address?.trim() || null
 
