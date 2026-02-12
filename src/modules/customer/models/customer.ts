@@ -27,14 +27,6 @@ export const Customer = model
     /** Прізвище користувача */
     last_name: model.text().nullable(),
 
-    // ===== АДРЕСНІ ДАНІ =====
-
-    /** Місто користувача */
-    city: model.text().nullable(),
-
-    /** Адреса доставки */
-    address: model.text().nullable(),
-
     // ===== SMS ВЕРИФІКАЦІЯ =====
 
     /**

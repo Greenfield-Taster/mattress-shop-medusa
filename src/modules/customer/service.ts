@@ -11,8 +11,6 @@ export interface CreateCustomerDTO {
   email?: string | null
   first_name?: string | null
   last_name?: string | null
-  city?: string | null
-  address?: string | null
   google_id?: string | null
   verification_code?: string | null
   code_expires_at?: Date | null
@@ -26,8 +24,6 @@ export interface UpdateCustomerDTO {
   email?: string | null
   first_name?: string | null
   last_name?: string | null
-  city?: string | null
-  address?: string | null
   google_id?: string | null
   verification_code?: string | null
   code_expires_at?: Date | null
