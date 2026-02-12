@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CUSTOMER_MODULE } from "../../../modules/customer"
 import type CustomerModuleService from "../../../modules/customer/service"
 import { generateToken } from "../../../utils/jwt"
-import { isDevCode, normalizePhoneNumber, validatePhoneNumber } from "../../../services/sms"
+import { normalizePhoneNumber, validatePhoneNumber } from "../../../services/sms"
 
 interface VerifyCodeRequestBody {
   phone: string
@@ -14,7 +14,7 @@ interface VerifyCodeRequestBody {
  *
  * Верифікує SMS код і повертає JWT токен.
  *
- * Body: { phone: "+380...", code: "123456" }
+ * Body: { phone: "+380...", code: "xxxxxx" }
  * Response: { token: "jwt...", user: {...} }
  */
 export async function POST(
@@ -62,8 +62,8 @@ export async function POST(
       })
     }
 
-    // Перевіряємо код (dev код 123456 завжди працює)
-    const isValid = isDevCode(code) || await customerService.verifyCode(customer.id, code)
+    // Перевіряємо код
+    const isValid = await customerService.verifyCode(customer.id, code)
 
     if (!isValid) {
       return res.status(401).json({

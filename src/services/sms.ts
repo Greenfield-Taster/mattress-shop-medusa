@@ -1,29 +1,16 @@
 /**
- * SMS Service - Mock implementation
+ * SMS Service
  *
- * В dev режимі код 123456 завжди валідний.
- * Для production замінити на Twilio/інший SMS провайдер.
+ * Для відправки SMS потрібно налаштувати Twilio:
+ * 1. npm install twilio
+ * 2. Встановити env змінні: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
  */
 
 /**
  * Генерувати 6-значний код верифікації
  */
 export function generateVerificationCode(): string {
-  // В dev режимі можна використовувати фіксований код для тестування
-  if (process.env.NODE_ENV === "development" && process.env.SMS_DEV_CODE) {
-    return process.env.SMS_DEV_CODE
-  }
-
-  // Генеруємо випадковий 6-значний код
   return Math.floor(100000 + Math.random() * 900000).toString()
-}
-
-/**
- * Перевірити чи це dev код (123456)
- * В dev режимі цей код завжди валідний
- */
-export function isDevCode(code: string): boolean {
-  return process.env.NODE_ENV === "development" && code === "123456"
 }
 
 /**
@@ -37,35 +24,33 @@ export async function sendVerificationSms(
   phone: string,
   code: string
 ): Promise<boolean> {
-  // В dev режимі просто логуємо
-  if (process.env.NODE_ENV === "development") {
-    console.log(`
-╔════════════════════════════════════════════╗
-║         SMS VERIFICATION CODE              ║
-╠════════════════════════════════════════════╣
-║  Phone: ${phone.padEnd(32)}║
-║  Code:  ${code.padEnd(32)}║
-║                                            ║
-║  Dev mode: use 123456 to bypass            ║
-╚════════════════════════════════════════════╝
-    `)
+  const accountSid = process.env.TWILIO_ACCOUNT_SID
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER
+
+  if (!accountSid || !authToken || !fromNumber) {
+    console.log(`[SMS] Verification code for ${phone}: ${code}`)
+    console.warn(
+      "[SMS] SMS provider not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER to send real SMS."
+    )
     return true
   }
 
-  // TODO: Інтеграція з реальним SMS провайдером (Twilio, etc.)
-  // Приклад для Twilio:
-  //
-  // import twilio from "twilio"
-  // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-  //
-  // await client.messages.create({
-  //   body: `Ваш код підтвердження: ${code}`,
-  //   from: process.env.TWILIO_PHONE_NUMBER,
-  //   to: phone
-  // })
+  try {
+    const twilio = require("twilio")
+    const client = twilio(accountSid, authToken)
 
-  console.log(`[SMS] Would send code ${code} to ${phone}`)
-  return true
+    await client.messages.create({
+      body: `Ваш код підтвердження: ${code}`,
+      from: fromNumber,
+      to: `+38${phone.replace(/^0/, "")}`,
+    })
+
+    return true
+  } catch (error) {
+    console.error("[SMS] Failed to send SMS:", error)
+    return false
+  }
 }
 
 /**
