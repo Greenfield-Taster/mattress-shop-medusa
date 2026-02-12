@@ -63,7 +63,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const cities = result.data.map((city: any) => ({
         value: city.Ref,
         label: city.Description,
-        area: city.AreaDescription,
+        area: city.AreaDescription ? `${city.AreaDescription} область` : '',
       }))
 
       // Зберігаємо в кеш
