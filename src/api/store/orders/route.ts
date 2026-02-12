@@ -59,8 +59,8 @@ interface CreateOrderBody {
   // Кошик
   items: OrderItemInput[]
 
-  // Суми
-  totals: {
+  // Суми (ігноруються — сервер перераховує самостійно)
+  totals?: {
     subtotal: number
     discount: number
     total: number
@@ -139,14 +139,6 @@ export async function POST(
       })
     }
 
-    // Суми
-    if (!body.totals || typeof body.totals.total !== "number") {
-      return res.status(400).json({
-        success: false,
-        error: "Суми замовлення обов'язкові",
-      })
-    }
-
     // ===== ПЕРЕВІРКА АВТОРИЗАЦІЇ =====
 
     let customerId: string | null = null
@@ -187,25 +179,35 @@ export async function POST(
       }
     }
 
+    // ===== SERVER-SIDE РОЗРАХУНОК СУМ =====
+
+    const serverSubtotal = body.items.reduce((sum, item) => {
+      return sum + Math.round(Number(item.price) * Number(item.qty) * 100)
+    }, 0)
+
     // ===== ВАЛІДАЦІЯ ПРОМОКОДУ =====
 
     let promoDiscountType: string | null = null
     let promoDiscountValue: number | null = null
+    let serverDiscount = 0
 
     if (body.promoCode?.code) {
       const validation = await promoCodeService.validatePromoCode(
         body.promoCode.code,
-        body.totals.subtotal
+        serverSubtotal
       )
 
       if (validation.valid && validation.promoCode) {
         promoDiscountType = validation.promoCode.discount_type
         promoDiscountValue = validation.promoCode.discount_value
+        serverDiscount = promoCodeService.calculateDiscount(validation.promoCode, serverSubtotal)
 
         // Інкрементуємо використання промокоду
         await promoCodeService.incrementUsage(validation.promoCode.id)
       }
     }
+
+    const serverTotal = Math.max(serverSubtotal - serverDiscount, 0)
 
     // ===== СТВОРЕННЯ ЗАМОВЛЕННЯ =====
 
@@ -232,10 +234,10 @@ export async function POST(
       edrpou: body.paymentData?.edrpou || null,
       company_address: body.paymentData?.companyAddress || null,
 
-      // Суми (в копійках для точності)
-      subtotal: Math.round(body.totals.subtotal * 100),
-      discount_amount: Math.round(body.totals.discount * 100),
-      total: Math.round(body.totals.total * 100),
+      // Суми (в копійках, розраховані на сервері)
+      subtotal: serverSubtotal,
+      discount_amount: serverDiscount,
+      total: serverTotal,
 
       // Промокод
       promo_code: body.promoCode?.code || null,
