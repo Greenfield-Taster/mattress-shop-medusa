@@ -70,7 +70,6 @@ export async function POST(
 
     // Витягуємо дані користувача з Google
     const { sub: googleId, email, given_name, family_name } = payload
-    console.log("[auth/google] Google payload:", { googleId, email, given_name, family_name })
 
     if (!email) {
       return res.status(400).json({
