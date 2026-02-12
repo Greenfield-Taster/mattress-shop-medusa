@@ -2,6 +2,7 @@ import { defineMiddlewares, validateAndTransformBody } from "@medusajs/framework
 import { z } from "zod"
 import multer from "multer"
 import cors from "cors"
+import rateLimit from "express-rate-limit"
 
 // Multer для завантаження файлів в пам'ять
 const upload = multer({
@@ -139,6 +140,39 @@ const UpdateProfileSchema = z.object({
   phone: z.string().optional(), // ігнорується в route, але фронтенд відправляє
 })
 
+// Rate limiters для auth ендпоінтів
+const smsRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато запитів на відправку SMS. Спробуйте через 15 хвилин" },
+})
+
+const verifyCodeRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато спроб верифікації. Спробуйте через 15 хвилин" },
+})
+
+const googleAuthRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато спроб входу. Спробуйте через 15 хвилин" },
+})
+
+const profileRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато запитів. Спробуйте через 15 хвилин" },
+})
+
 // CORS налаштування для кастомних роутів
 const storeCorsOptions = {
   origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
@@ -188,26 +222,31 @@ export default defineMiddlewares({
       middlewares: [validateAndTransformBody(UpdatePromoCodeSchema)],
     },
 
-    // ===== AUTH ROUTES =====
+    // ===== AUTH ROUTES (with rate limiting) =====
     {
       method: "POST",
       matcher: "/auth/send-code",
-      middlewares: [validateAndTransformBody(SendCodeSchema)],
+      middlewares: [smsRateLimit, validateAndTransformBody(SendCodeSchema)],
     },
     {
       method: "POST",
       matcher: "/auth/verify-code",
-      middlewares: [validateAndTransformBody(VerifyCodeSchema)],
+      middlewares: [verifyCodeRateLimit, validateAndTransformBody(VerifyCodeSchema)],
     },
     {
       method: "POST",
       matcher: "/auth/google",
-      middlewares: [validateAndTransformBody(GoogleAuthSchema)],
+      middlewares: [googleAuthRateLimit, validateAndTransformBody(GoogleAuthSchema)],
     },
     {
       method: "PUT",
       matcher: "/auth/update",
-      middlewares: [validateAndTransformBody(UpdateProfileSchema)],
+      middlewares: [profileRateLimit, validateAndTransformBody(UpdateProfileSchema)],
+    },
+    {
+      method: "GET",
+      matcher: "/auth/me",
+      middlewares: [profileRateLimit],
     },
   ],
 })
