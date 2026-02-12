@@ -173,6 +173,14 @@ const profileRateLimit = rateLimit({
   message: { error: "Забагато запитів. Спробуйте через 15 хвилин" },
 })
 
+const deliveryRateLimit = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  limit: 30,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато запитів до API доставки. Спробуйте через хвилину" },
+})
+
 // CORS налаштування для кастомних роутів
 const storeCorsOptions = {
   origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
@@ -191,6 +199,12 @@ export default defineMiddlewares({
     {
       matcher: "/shop-orders/*",
       middlewares: [cors(storeCorsOptions)],
+    },
+
+    // ===== DELIVERY PROXY =====
+    {
+      matcher: "/store/delivery/*",
+      middlewares: [cors(storeCorsOptions), deliveryRateLimit],
     },
 
     // ===== MATTRESS ROUTES =====
