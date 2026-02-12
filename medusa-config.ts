@@ -9,8 +9,8 @@ module.exports = defineConfig({
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || "supersecret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+      jwtSecret: process.env.JWT_SECRET,
+      cookieSecret: process.env.COOKIE_SECRET,
     },
   },
   modules: [
@@ -43,7 +43,7 @@ module.exports = defineConfig({
               // Директорія для збереження файлів (static - обслуговується MedusaJS)
               upload_dir: "static",
               // URL бекенду для формування URL файлів (з /static на кінці)
-              backend_url: process.env.BACKEND_URL || "http://localhost:9000/static",
+              backend_url: process.env.BACKEND_URL,
             },
           },
         ],
