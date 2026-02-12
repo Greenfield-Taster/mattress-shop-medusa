@@ -202,9 +202,10 @@ export async function POST(
       })
 
       for (const variant of dbVariants) {
-        const priceArray = variant.prices || variant.price_set?.prices
+        const v = variant as Record<string, any>
+        const priceArray = v.prices || v.price_set?.prices
         const basePrice = priceArray?.[0]?.amount || 0
-        const discountPercent = variant.product?.mattress_attributes?.discount_percent || 0
+        const discountPercent = v.product?.mattress_attributes?.discount_percent || 0
         const finalPrice = calculateDiscountedPrice(basePrice, discountPercent)
         verifiedPrices.set(variant.id, finalPrice)
       }
