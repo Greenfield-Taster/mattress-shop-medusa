@@ -22,8 +22,6 @@ interface ShopCustomer {
   email: string | null
   first_name: string | null
   last_name: string | null
-  city: string | null
-  address: string | null
   google_id: string | null
   is_active: boolean
   last_login_at: string | null
@@ -36,8 +34,6 @@ interface FormData {
   last_name: string
   email: string
   phone: string
-  city: string
-  address: string
   is_active: boolean
 }
 
@@ -51,8 +47,6 @@ const EditCustomerPage = () => {
     last_name: "",
     email: "",
     phone: "",
-    city: "",
-    address: "",
     is_active: true,
   })
 
@@ -83,8 +77,6 @@ const EditCustomerPage = () => {
         last_name: c.last_name || "",
         email: c.email || "",
         phone: c.phone || "",
-        city: c.city || "",
-        address: c.address || "",
         is_active: c.is_active,
       })
     }
@@ -243,29 +235,6 @@ const EditCustomerPage = () => {
                     Обережно: користувач входить через Google
                   </Text>
                 )}
-              </div>
-            </div>
-
-            {/* Address fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Місто</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleChange("city", e.target.value)}
-                  placeholder="Київ"
-                />
-              </div>
-              <div>
-                <Label htmlFor="address">Адреса</Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  placeholder="Вулиця, будинок, квартира"
-                  rows={2}
-                />
               </div>
             </div>
 

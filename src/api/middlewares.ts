@@ -135,9 +135,7 @@ const UpdateProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   email: z.string().email("Невірний формат email").optional().or(z.literal("")),
-  city: z.string().optional(),
-  address: z.string().optional(),
-  phone: z.string().optional(), // ігнорується в route, але фронтенд відправляє
+  phone: z.string().optional(),
 })
 
 // Rate limiters для auth ендпоінтів

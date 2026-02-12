@@ -24,8 +24,6 @@ interface ShopCustomer {
   email: string | null
   first_name: string | null
   last_name: string | null
-  city: string | null
-  address: string | null
   google_id: string | null
   is_active: boolean
   last_login_at: string | null

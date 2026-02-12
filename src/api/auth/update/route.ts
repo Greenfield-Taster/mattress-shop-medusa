@@ -9,8 +9,6 @@ interface UpdateProfileRequestBody {
   lastName?: string
   email?: string
   phone?: string
-  city?: string
-  address?: string
 }
 
 /**
@@ -47,13 +45,11 @@ export async function PUT(
       })
     }
 
-    const { firstName, lastName, email, phone, city, address } = req.body
+    const { firstName, lastName, email, phone } = req.body
 
     // Нормалізуємо порожні рядки в null
     const normalizedEmail = email?.trim() || null
     const normalizedPhone = phone ? normalizePhoneNumber(phone) : null
-    const normalizedCity = city?.trim() || null
-    const normalizedAddress = address?.trim() || null
 
     // Валідація email якщо передано
     if (normalizedEmail && !isValidEmail(normalizedEmail)) {
@@ -113,8 +109,6 @@ export async function PUT(
       last_name: lastName?.trim() || existingCustomer.last_name,
       email: normalizedEmail ?? existingCustomer.email,
       phone: normalizedPhone ?? existingCustomer.phone,
-      city: normalizedCity ?? existingCustomer.city,
-      address: normalizedAddress ?? existingCustomer.address,
     })
 
     return res.status(200).json({
@@ -125,8 +119,6 @@ export async function PUT(
         email: updatedCustomer.email,
         firstName: updatedCustomer.first_name,
         lastName: updatedCustomer.last_name,
-        city: updatedCustomer.city,
-        address: updatedCustomer.address,
         createdAt: updatedCustomer.created_at,
       },
     })

@@ -52,7 +52,7 @@ export async function PUT(
 ) {
   try {
     const { id } = req.params
-    const { first_name, last_name, email, phone, city, address, is_active } = req.body
+    const { first_name, last_name, email, phone, is_active } = req.body
 
     // Нормалізуємо порожні рядки в null для унікальних полів
     const normalizedEmail = email?.trim() || null
@@ -96,8 +96,6 @@ export async function PUT(
       last_name: last_name?.trim() || existingCustomer.last_name,
       email: normalizedEmail ?? existingCustomer.email,
       phone: normalizedPhone ?? existingCustomer.phone,
-      city: city?.trim() || existingCustomer.city,
-      address: address?.trim() || existingCustomer.address,
       is_active: is_active ?? existingCustomer.is_active,
     })
 
