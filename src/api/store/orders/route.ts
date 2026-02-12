@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { SHOP_ORDER_MODULE } from "../../../modules/order"
 import type OrderModuleService from "../../../modules/order/service"
 import { CUSTOMER_MODULE } from "../../../modules/customer"
@@ -7,6 +8,7 @@ import { PROMO_CODE_MODULE } from "../../../modules/promo-code"
 import type PromoCodeModuleService from "../../../modules/promo-code/service"
 import { extractBearerToken, verifyToken } from "../../../utils/jwt"
 import { normalizePhoneNumber } from "../../../services/sms"
+import { calculateDiscountedPrice } from "../../../utils/mattress-formatters"
 
 // Вимикаємо вбудовану авторизацію MedusaJS - використовуємо власну JWT авторизацію
 export const AUTHENTICATE = false
@@ -179,10 +181,41 @@ export async function POST(
       }
     }
 
-    // ===== SERVER-SIDE РОЗРАХУНОК СУМ =====
+    // ===== SERVER-SIDE ВЕРИФІКАЦІЯ ЦІН =====
 
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+
+    // Збираємо variant_id з товарів
+    const variantIds = body.items
+      .map((item) => item.variant_id)
+      .filter((id): id is string => !!id)
+
+    // Карта: variant_id → верифікована ціна (в грн)
+    const verifiedPrices = new Map<string, number>()
+
+    if (variantIds.length > 0) {
+      // Отримуємо варіанти з цінами та продукти з mattress_attributes (для знижки)
+      const { data: dbVariants } = await query.graph({
+        entity: "product_variant",
+        fields: ["id", "prices.*", "product.id", "product.mattress_attributes.*"],
+        filters: { id: variantIds },
+      })
+
+      for (const variant of dbVariants) {
+        const priceArray = variant.prices || variant.price_set?.prices
+        const basePrice = priceArray?.[0]?.amount || 0
+        const discountPercent = variant.product?.mattress_attributes?.discount_percent || 0
+        const finalPrice = calculateDiscountedPrice(basePrice, discountPercent)
+        verifiedPrices.set(variant.id, finalPrice)
+      }
+    }
+
+    // Рахуємо subtotal з верифікованих цін (fallback на клієнтську якщо variant_id відсутній)
     const serverSubtotal = body.items.reduce((sum, item) => {
-      return sum + Math.round(Number(item.price) * Number(item.qty) * 100)
+      const price = item.variant_id && verifiedPrices.has(item.variant_id)
+        ? verifiedPrices.get(item.variant_id)!
+        : Number(item.price)
+      return sum + Math.round(price * Number(item.qty) * 100)
     }, 0)
 
     // ===== ВАЛІДАЦІЯ ПРОМОКОДУ =====
@@ -245,18 +278,24 @@ export async function POST(
       promo_discount_value: promoDiscountValue ? Math.round(promoDiscountValue) : null,
     }
 
-    // Підготовка товарів
-    const orderItems = body.items.map((item) => ({
-      product_id: item.product_id || (item.id ? String(item.id) : null),
-      variant_id: item.variant_id || null,
-      title: item.title,
-      image: item.image || null,
-      size: item.size || null,
-      firmness: item.firmness || null,
-      unit_price: Math.round(item.price * 100),
-      quantity: item.qty,
-      total: Math.round(item.price * item.qty * 100),
-    }))
+    // Підготовка товарів (з верифікованими цінами)
+    const orderItems = body.items.map((item) => {
+      const price = item.variant_id && verifiedPrices.has(item.variant_id)
+        ? verifiedPrices.get(item.variant_id)!
+        : Number(item.price)
+
+      return {
+        product_id: item.product_id || (item.id ? String(item.id) : null),
+        variant_id: item.variant_id || null,
+        title: item.title,
+        image: item.image || null,
+        size: item.size || null,
+        firmness: item.firmness || null,
+        unit_price: Math.round(price * 100),
+        quantity: item.qty,
+        total: Math.round(price * item.qty * 100),
+      }
+    })
 
     // Створюємо замовлення з товарами
     const order = await orderService.createOrderWithItems(orderData, orderItems)
