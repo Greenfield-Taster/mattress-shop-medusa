@@ -71,13 +71,6 @@ export const FILLER_LABELS: Record<string, string> = {
   latex_foam: "Латексована піна",
 }
 
-export const HARDNESS_LABELS: Record<string, string> = {
-  H1: "Н1 (м'який)",
-  H2: "Н2 (середній)",
-  H3: "Н3 (вище середнього)",
-  H4: "Н4 (жорсткий)",
-  H5: "Н5 (дуже жорсткий)",
-}
 
 // 29 стандартних розмірів (синхронізовано з MattressQuiz на фронтенді)
 export const SIZE_CATEGORIES: Record<string, string[]> = {
@@ -179,13 +172,6 @@ export function formatFillers(fillers: string[] | Record<string, unknown> | unde
   return extractFillers(fillers).map(f => FILLER_LABELS[f] || f)
 }
 
-/**
- * Форматує жорсткість для українського UI
- */
-export function formatHardness(hardness: string | undefined): string {
-  if (!hardness) return ""
-  return HARDNESS_LABELS[hardness] || hardness
-}
 
 // ===== ЦІНИ =====
 
