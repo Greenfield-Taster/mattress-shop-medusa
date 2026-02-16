@@ -43,6 +43,8 @@ interface CreateOrderBody {
   deliveryCityRef?: string
   deliveryAddress?: string
   deliveryWarehouse?: string
+  deliveryPrice?: number
+  deliveryPriceType?: string
 
   // Оплата
   paymentMethod: string
@@ -258,6 +260,8 @@ export async function POST(
       delivery_city_ref: body.deliveryCityRef || null,
       delivery_address: body.deliveryAddress || null,
       delivery_warehouse: body.deliveryWarehouse || null,
+      delivery_price: body.deliveryPrice != null ? Math.round(body.deliveryPrice * 100) : 0,
+      delivery_price_type: body.deliveryPriceType || "free",
 
       // Оплата
       payment_method: body.paymentMethod,

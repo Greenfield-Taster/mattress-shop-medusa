@@ -83,6 +83,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           delivery_city: order.delivery_city,
           delivery_address: order.delivery_address,
           delivery_warehouse: order.delivery_warehouse,
+          delivery_price: Number(order.delivery_price || 0) / 100,
+          delivery_price_type: order.delivery_price_type || "free",
 
           // Оплата
           payment_method: order.payment_method,
@@ -135,6 +137,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           delivery_city: order.delivery_city,
           delivery_address: order.delivery_address,
           delivery_warehouse: order.delivery_warehouse,
+          delivery_price: Number(order.delivery_price || 0) / 100,
+          delivery_price_type: order.delivery_price_type || "free",
 
           // Суми
           subtotal: Number(order.subtotal) / 100,

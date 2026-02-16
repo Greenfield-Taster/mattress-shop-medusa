@@ -104,6 +104,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       delivery_method: order.delivery_method,
       delivery_city: order.delivery_city,
       delivery_warehouse: order.delivery_warehouse,
+      delivery_price: Number(order.delivery_price || 0) / 100,
+      delivery_price_type: order.delivery_price_type || "free",
       subtotal: Number(order.subtotal) / 100,
       discount: Number(order.discount_amount) / 100,
       total: Number(order.total) / 100,
