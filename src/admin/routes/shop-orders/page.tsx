@@ -78,6 +78,8 @@ const DELIVERY_METHODS: Record<string, string> = {
   "nova-poshta": "Нова Пошта",
   "meest": "Meest",
   "delivery": "Delivery",
+  "ukrposhta": "Укрпошта",
+  "cat": "CAT",
   "courier": "Кур'єр",
   "pickup": "Самовивіз",
 }
