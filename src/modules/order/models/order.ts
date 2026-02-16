@@ -64,6 +64,17 @@ export const Order = model
     /** Відділення/поштомат */
     delivery_warehouse: model.text().nullable(),
 
+    /** Вартість доставки (в копійках) */
+    delivery_price: model.bigNumber().default(0),
+
+    /**
+     * Тип ціни доставки:
+     * - free (безкоштовно)
+     * - fixed (фіксована ціна, напр. 500 грн)
+     * - carrier (за тарифами перевізника — точна сума невідома)
+     */
+    delivery_price_type: model.text().default("free"),
+
     // ===== ОПЛАТА =====
 
     /**
