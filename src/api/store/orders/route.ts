@@ -112,6 +112,14 @@ export async function POST(
       })
     }
 
+    const normalizedPhone = normalizePhoneNumber(body.contactData.phone)
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
+      return res.status(400).json({
+        success: false,
+        error: "Невірний формат телефону (очікується 10 цифр, наприклад 0501234567)",
+      })
+    }
+
     if (!body.contactData?.email) {
       return res.status(400).json({
         success: false,
@@ -119,12 +127,51 @@ export async function POST(
       })
     }
 
-    // Доставка
-    if (!body.deliveryMethod) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.contactData.email)) {
       return res.status(400).json({
         success: false,
-        error: "Спосіб доставки обов'язковий",
+        error: "Невірний формат email",
       })
+    }
+
+    // Доставка
+    const VALID_DELIVERY_METHODS = ["nova-poshta", "meest", "delivery", "ukrposhta", "cat", "courier", "pickup"]
+    if (!body.deliveryMethod || !VALID_DELIVERY_METHODS.includes(body.deliveryMethod)) {
+      return res.status(400).json({
+        success: false,
+        error: "Невірний спосіб доставки",
+      })
+    }
+
+    const POSTAL_METHODS = ["nova-poshta", "meest", "delivery", "ukrposhta", "cat"]
+    if (POSTAL_METHODS.includes(body.deliveryMethod)) {
+      if (!body.deliveryCity) {
+        return res.status(400).json({
+          success: false,
+          error: "Місто доставки обов'язкове",
+        })
+      }
+      if (!body.deliveryWarehouse) {
+        return res.status(400).json({
+          success: false,
+          error: "Відділення/поштомат обов'язкове",
+        })
+      }
+    }
+
+    if (body.deliveryMethod === "courier") {
+      if (!body.deliveryCity) {
+        return res.status(400).json({
+          success: false,
+          error: "Місто доставки обов'язкове",
+        })
+      }
+      if (!body.deliveryAddress) {
+        return res.status(400).json({
+          success: false,
+          error: "Адреса доставки обов'язкова",
+        })
+      }
     }
 
     // Оплата
