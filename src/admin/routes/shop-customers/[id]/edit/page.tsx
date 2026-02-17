@@ -1,4 +1,3 @@
-import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   Container,
   Heading,
@@ -293,9 +292,5 @@ const EditCustomerPage = () => {
     </div>
   )
 }
-
-export const config = defineRouteConfig({
-  label: "Редагування користувача",
-})
 
 export default EditCustomerPage

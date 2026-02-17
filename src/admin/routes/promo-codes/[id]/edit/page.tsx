@@ -1,4 +1,3 @@
-import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   Container,
   Heading,
@@ -373,9 +372,5 @@ const EditPromoCodePage = () => {
     </div>
   )
 }
-
-export const config = defineRouteConfig({
-  label: "Редагувати промокод",
-})
 
 export default EditPromoCodePage
