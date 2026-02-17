@@ -28,9 +28,9 @@ const HARDNESS_OPTIONS = [
 ]
 
 const BLOCK_TYPE_OPTIONS = [
+  { value: "springless", label: "Безпружинний" },
   { value: "independent_spring", label: "Незалежний пружинний блок" },
   { value: "bonnel_spring", label: "Залежний пружинний блок (Bonnel)" },
-  { value: "springless", label: "Безпружинний" },
 ]
 
 // Синхронізовано з фронтендом (Catalog.jsx filterOptions.types)
@@ -50,9 +50,9 @@ const COVER_TYPE_OPTIONS = [
 
 const FILLER_OPTIONS = [
   { value: "latex", label: "Латекс" },
-  { value: "memory_foam", label: "Піна з пам'яттю" },
-  { value: "coconut", label: "Кокосове волокно" },
   { value: "latex_foam", label: "Латексована піна" },
+  { value: "memory_foam", label: "Піна з пам'яттю" },
+  { value: "coconut", label: "Кокосове полотно" },
 ]
 
 const STATUS_OPTIONS = [
@@ -328,6 +328,16 @@ const EditMattressPage = () => {
 
   // Збереження
   const handleSave = () => {
+    if (!title.trim()) {
+      toast.error("Помилка", { description: "Введіть назву матраца" })
+      return
+    }
+
+    if (selectedFillers.length === 0) {
+      toast.error("Помилка", { description: "Виберіть хоча б один наповнювач" })
+      return
+    }
+
     updateMutation.mutate({
       title,
       status,
