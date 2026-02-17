@@ -65,8 +65,8 @@ const CreatePromoCodePage = () => {
     e.preventDefault()
 
     // Валідація
-    if (!code.trim()) {
-      toast.error("Помилка", { description: "Введіть код промокоду" })
+    if (code.trim().length !== 6) {
+      toast.error("Помилка", { description: "Код промокоду має містити рівно 6 символів" })
       return
     }
 
@@ -131,11 +131,12 @@ const CreatePromoCodePage = () => {
                 id="code"
                 placeholder="SAVE10"
                 value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+                maxLength={6}
                 className="mt-1 font-mono"
               />
               <Text className="text-xs text-gray-500 mt-1">
-                Унікальний код, який вводитимуть клієнти
+                Рівно 6 символів (латиниця та цифри)
               </Text>
             </div>
 
