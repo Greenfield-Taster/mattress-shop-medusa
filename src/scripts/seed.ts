@@ -307,43 +307,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
               },
             ],
           },
-          {
-            name: "Meest Express",
-            price_type: "flat",
-            provider_id: "manual_manual",
-            service_zone_id: fulfillmentSet.service_zones[0].id,
-            shipping_profile_id: shippingProfile.id,
-            type: {
-              label: "Meest Express",
-              description: "Доставка 2-4 дні",
-              code: "meest",
-            },
-            prices: [
-              {
-                currency_code: "uah",
-                amount: 0,
-              },
-              {
-                region_id: region.id,
-                amount: 0,
-              },
-            ],
-            rules: [
-              {
-                attribute: "enabled_in_store",
-                value: "true",
-                operator: "eq",
-              },
-              {
-                attribute: "is_return",
-                value: "false",
-                operator: "eq",
-              },
-            ],
-          },
         ],
       })
-      logger.info("✓ Created shipping options (Nova Poshta, Meest)")
+      logger.info("✓ Created shipping options (Nova Poshta)")
     } catch (error: any) {
       logger.info("• Shipping options creation skipped: " + error.message)
     }

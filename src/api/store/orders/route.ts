@@ -135,7 +135,7 @@ export async function POST(
     }
 
     // Доставка
-    const VALID_DELIVERY_METHODS = ["nova-poshta", "meest", "delivery", "ukrposhta", "cat", "courier", "pickup"]
+    const VALID_DELIVERY_METHODS = ["nova-poshta", "delivery", "cat", "courier", "pickup"]
     if (!body.deliveryMethod || !VALID_DELIVERY_METHODS.includes(body.deliveryMethod)) {
       return res.status(400).json({
         success: false,
@@ -143,7 +143,7 @@ export async function POST(
       })
     }
 
-    const POSTAL_METHODS = ["nova-poshta", "meest", "delivery", "ukrposhta", "cat"]
+    const POSTAL_METHODS = ["nova-poshta", "delivery", "cat"]
     if (POSTAL_METHODS.includes(body.deliveryMethod)) {
       if (!body.deliveryCity) {
         return res.status(400).json({

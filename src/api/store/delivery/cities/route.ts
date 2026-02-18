@@ -138,7 +138,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         cities = await fetchSatCities(query)
         break
       default:
-        // meest, ukrposhta — ще не інтегровані
         return res.json({ success: true, data: [] })
     }
 

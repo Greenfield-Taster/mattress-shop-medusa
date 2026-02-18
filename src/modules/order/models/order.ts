@@ -45,8 +45,8 @@ export const Order = model
     /**
      * Спосіб доставки:
      * - nova-poshta
-     * - meest
      * - delivery
+     * - cat
      * - courier
      * - pickup
      */

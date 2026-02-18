@@ -76,9 +76,7 @@ const PAYMENT_STATUSES = [
 
 const DELIVERY_METHODS: Record<string, string> = {
   "nova-poshta": "Нова Пошта",
-  "meest": "Meest",
   "delivery": "Delivery",
-  "ukrposhta": "Укрпошта",
   "cat": "SAT",
   "courier": "Кур'єр",
   "pickup": "Самовивіз",
