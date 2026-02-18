@@ -25,7 +25,7 @@ function getSecret(): string {
  * @param userId - ID користувача
  * @param expiresIn - час життя токена (за замовчуванням 7 днів)
  */
-export function generateToken(userId: string, expiresInSeconds: number = 7 * 24 * 60 * 60): string {
+export function generateToken(userId: string, expiresInSeconds: number = 3 * 24 * 60 * 60): string {
   const payload: TokenPayload = { userId }
   const options: SignOptions = { expiresIn: expiresInSeconds }
   return jwt.sign(payload, getSecret(), options)
