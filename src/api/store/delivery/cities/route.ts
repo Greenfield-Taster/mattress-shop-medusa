@@ -107,7 +107,7 @@ async function fetchSatCities(query: string) {
  *
  * Проксі до API перевізників для пошуку міст.
  * carrier: nova-poshta (default), delivery-auto, cat
- * Інші перевізники (meest, ukrposhta) повертають порожній масив.
+ * Невідомі перевізники повертають порожній масив.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
