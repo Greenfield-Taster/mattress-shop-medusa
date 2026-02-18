@@ -116,6 +116,16 @@ const UpdatePromoCodeSchema = z.object({
   is_active: z.boolean().optional(),
 })
 
+// ===== REVIEW SCHEMA =====
+
+const CreateReviewSchema = z.object({
+  product_id: z.string().min(1, "ID продукту обов'язковий"),
+  name: z.string().min(2, "Ім'я має містити мінімум 2 символи").max(50, "Ім'я має містити максимум 50 символів"),
+  email: z.string().email("Невірний формат email"),
+  rating: z.number().int("Оцінка має бути цілим числом").min(1, "Мінімальна оцінка — 1").max(5, "Максимальна оцінка — 5"),
+  comment: z.string().min(10, "Відгук має містити мінімум 10 символів").max(1000, "Відгук має містити максимум 1000 символів"),
+})
+
 // ===== AUTH SCHEMAS =====
 
 const SendCodeSchema = z.object({
@@ -187,6 +197,14 @@ const deliveryRateLimit = rateLimit({
   message: { error: "Забагато запитів до API доставки. Спробуйте через хвилину" },
 })
 
+const reviewRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато відгуків. Спробуйте через 15 хвилин" },
+})
+
 // CORS налаштування для кастомних роутів
 const storeCorsOptions = {
   origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
@@ -211,6 +229,21 @@ export default defineMiddlewares({
     {
       matcher: "/store/delivery/*",
       middlewares: [cors(storeCorsOptions), deliveryRateLimit],
+    },
+
+    // ===== REVIEW ROUTES =====
+    {
+      matcher: "/store/reviews",
+      middlewares: [cors(storeCorsOptions)],
+    },
+    {
+      matcher: "/store/reviews/*",
+      middlewares: [cors(storeCorsOptions)],
+    },
+    {
+      method: "POST",
+      matcher: "/store/reviews",
+      middlewares: [reviewRateLimit, validateAndTransformBody(CreateReviewSchema)],
     },
 
     // ===== MATTRESS ROUTES =====
