@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 const NOVA_POSHTA_API_URL = "https://api.novaposhta.ua/v2.0/json/"
 const DELIVERY_AUTO_WAREHOUSES_URL = "https://www.delivery-auto.com/api/v4/Public/GetWarehousesListByCity"
+const SAT_API_URL = "https://api.sat.ua/openws/hs/api/v1.0/main/json"
 
 // Ref поштоматів у Nova Poshta API
 const POSTOMAT_TYPE_REF = "9a68df70-0267-42a8-bb5c-37f427e36ee4"
@@ -91,11 +92,40 @@ async function fetchDeliveryAutoWarehouses(cityId: string) {
 }
 
 /**
+ * SAT: кеш усіх відділень (276 шт., завантажуються один раз)
+ */
+let satBranchesCache: { data: any[] | null; timestamp: number } = { data: null, timestamp: 0 }
+const SAT_BRANCHES_TTL = 24 * 60 * 60 * 1000 // 24 години
+
+async function fetchSatWarehouses(cityRef: string) {
+  // Завантажуємо всі відділення один раз і кешуємо на 24 год
+  if (!satBranchesCache.data || Date.now() - satBranchesCache.timestamp > SAT_BRANCHES_TTL) {
+    const response = await fetch(`${SAT_API_URL}/getRsp?language=uk`)
+    const result = await response.json()
+
+    if (result.success === "true" && result.data) {
+      satBranchesCache = { data: result.data, timestamp: Date.now() }
+    } else {
+      return []
+    }
+  }
+
+  return satBranchesCache.data!
+    .filter((branch: any) => branch.cityRef === cityRef)
+    .map((branch: any) => ({
+      value: branch.ref,
+      label: branch.description,
+      address: branch.address || '',
+      number: branch.number || '',
+    }))
+}
+
+/**
  * GET /store/delivery/warehouses?cityRef=xxx&q=search&type=postomat&carrier=nova-poshta
  *
  * Проксі до API перевізників для пошуку відділень.
- * carrier: nova-poshta (default), delivery-auto
- * type=postomat — тільки для Nova Poshta (Delivery Auto не має поштоматів).
+ * carrier: nova-poshta (default), delivery-auto, cat
+ * type=postomat — тільки для Nova Poshta (інші перевізники не мають поштоматів).
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
@@ -137,8 +167,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         // Delivery Auto не має поштоматів — ігноруємо type=postomat
         warehouses = await fetchDeliveryAutoWarehouses(cityRef)
         break
+      case "cat":
+        warehouses = await fetchSatWarehouses(cityRef)
+        break
       default:
-        // meest, ukrposhta, cat — ще не інтегровані
+        // meest, ukrposhta — ще не інтегровані
         return res.json({ success: true, data: [] })
     }
 

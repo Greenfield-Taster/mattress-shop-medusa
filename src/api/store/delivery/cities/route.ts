@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 const NOVA_POSHTA_API_URL = "https://api.novaposhta.ua/v2.0/json/"
 const DELIVERY_AUTO_API_URL = "https://www.delivery-auto.com/api/v4/Public/GetAreasList"
+const SAT_API_URL = "https://api.sat.ua/openws/hs/api/v1.0/main/json"
 
 // In-memory кеш: ключ → { data, timestamp }
 const cache = new Map<string, { data: any[]; timestamp: number }>()
@@ -77,11 +78,36 @@ async function fetchDeliveryAutoCities(query: string) {
 }
 
 /**
+ * Пошук міст через SAT API (публічний, без ключа для довідникових запитів)
+ */
+async function fetchSatCities(query: string) {
+  const params = new URLSearchParams({
+    searchString: query,
+    language: "uk",
+  })
+
+  const response = await fetch(`${SAT_API_URL}/getTowns?${params}`)
+  const result = await response.json()
+
+  if (result.success === "true" && result.data) {
+    return result.data
+      .filter((city: any) => city.services && city.services.length > 0)
+      .map((city: any) => ({
+        value: city.ref,
+        label: city.description,
+        area: city.region || '',
+      }))
+  }
+
+  return []
+}
+
+/**
  * GET /store/delivery/cities?q=Київ&carrier=nova-poshta
  *
  * Проксі до API перевізників для пошуку міст.
- * carrier: nova-poshta (default), delivery-auto
- * Інші перевізники (meest, ukrposhta, cat) повертають порожній масив.
+ * carrier: nova-poshta (default), delivery-auto, cat
+ * Інші перевізники (meest, ukrposhta) повертають порожній масив.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
@@ -108,8 +134,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       case "delivery-auto":
         cities = await fetchDeliveryAutoCities(query)
         break
+      case "cat":
+        cities = await fetchSatCities(query)
+        break
       default:
-        // meest, ukrposhta, cat — ще не інтегровані
+        // meest, ukrposhta — ще не інтегровані
         return res.json({ success: true, data: [] })
     }
 
