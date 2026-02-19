@@ -256,26 +256,26 @@ class OrderModuleService extends MedusaService({
 
   /**
    * Перевірити чи email має підтверджену покупку конкретного продукту.
-   * Шукає замовлення зі статусом delivered/shipping, що містять product_id.
+   * Шукає будь-яке не-скасоване замовлення, що містять product_id.
    */
   async hasVerifiedPurchase(email: string, productId: string): Promise<boolean> {
-    // Знаходимо замовлення з відповідним email і статусом
-    const deliveredOrders = await this.listOrders(
-      { email, status: "delivered" },
-      { order: { created_at: "DESC" } }
-    )
-    const shippingOrders = await this.listOrders(
-      { email, status: "shipping" },
-      { order: { created_at: "DESC" } }
-    )
+    // Шукаємо замовлення з будь-яким не-скасованим статусом
+    const statuses = ["pending", "processing", "shipping", "delivered"]
+    const allOrders: OrderType[] = []
 
-    const orders = [...deliveredOrders, ...shippingOrders]
+    for (const status of statuses) {
+      const orders = await this.listOrders({ email, status })
+      allOrders.push(...orders)
+    }
 
-    for (const order of orders) {
+    for (const order of allOrders) {
       const items = await this.listOrderItems({ order_id: order.id })
-      if (items.some((item: Record<string, any>) => item.product_id === productId)) {
-        return true
-      }
+      const match = items.some((item: Record<string, any>) => {
+        if (!item.product_id) return false
+        // Точний збіг або збіг по префіксу (для старих замовлень з composite ID "productId-variantId")
+        return item.product_id === productId || item.product_id.startsWith(productId + "-")
+      })
+      if (match) return true
     }
 
     return false
