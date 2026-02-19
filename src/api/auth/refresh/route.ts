@@ -56,6 +56,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(200).json({
       success: true,
       token: newToken,
+      expiresIn: 259200,
     })
   } catch (error) {
     console.error("[auth/refresh] Error:", error)
