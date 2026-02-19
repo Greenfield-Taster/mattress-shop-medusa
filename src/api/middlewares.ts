@@ -48,6 +48,13 @@ const CreateMattressSchema = z.object({
   is_new: z.boolean().optional(),
   discount_percent: z.number().min(0).max(100).optional(),
 
+  // Сертифікати
+  certificates: z.array(z.object({
+    title: z.string(),
+    image: z.string(),
+    description: z.string().optional(),
+  })).optional(),
+
   // Варіанти (розміри з цінами)
   variants: z.array(z.object({
     size: z.string(),
@@ -75,6 +82,11 @@ const UpdateMattressSchema = z.object({
   specs: z.array(z.string()).optional(),
   is_new: z.boolean().optional(),
   discount_percent: z.number().min(0).max(100).optional(),
+  certificates: z.array(z.object({
+    title: z.string(),
+    image: z.string(),
+    description: z.string().optional(),
+  })).optional(),
   variants: z.array(z.object({
     id: z.string(),
     price: z.number().min(0),
