@@ -16,9 +16,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   EllipsisHorizontal,
   Eye,
-  CheckCircle,
-  XCircle,
-  Clock,
   TruckFast,
   MagnifyingGlass,
 } from "@medusajs/icons"
@@ -28,6 +25,7 @@ import { useState } from "react"
 interface OrderItem {
   id: string
   title: string
+  image: string | null
   size: string | null
   firmness: string | null
   quantity: number
@@ -38,19 +36,31 @@ interface OrderItem {
 interface Order {
   id: string
   order_number: string
+  customer_id: string | null
   full_name: string
   phone: string
   email: string
+  comment: string | null
   status: string
   payment_status: string
   payment_method: string
   delivery_method: string
   delivery_city: string | null
+  delivery_city_ref: string | null
+  delivery_address: string | null
   delivery_warehouse: string | null
+  delivery_price: number
+  delivery_price_type: string
   subtotal: number
   discount_amount: number
   total: number
   promo_code: string | null
+  promo_discount_type: string | null
+  promo_discount_value: number | null
+  company_name: string | null
+  edrpou: string | null
+  company_address: string | null
+  admin_notes: string | null
   items: OrderItem[]
   items_count: number
   created_at: string
@@ -87,6 +97,12 @@ const PAYMENT_METHODS: Record<string, string> = {
   "card-online": "Картка онлайн",
   "google-apple-pay": "Google/Apple Pay",
   "invoice": "Рахунок",
+}
+
+const DELIVERY_PRICE_TYPES: Record<string, string> = {
+  "free": "Безкоштовно",
+  "fixed": "Фіксована",
+  "carrier": "За тарифами перевізника",
 }
 
 // Helpers
@@ -425,9 +441,10 @@ const ShopOrdersPage = () => {
           onClick={() => setSelectedOrder(null)}
         >
           <div
-            className="bg-ui-bg-base rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto m-4"
+            className="bg-ui-bg-base rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-auto m-4"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="p-6 border-b border-ui-border-base">
               <div className="flex items-center justify-between">
                 <div>
@@ -436,6 +453,9 @@ const ShopOrdersPage = () => {
                   </Heading>
                   <Text className="text-ui-fg-subtle">
                     {formatDate(selectedOrder.created_at)}
+                    {selectedOrder.updated_at !== selectedOrder.created_at && (
+                      <> (оновлено: {formatDate(selectedOrder.updated_at)})</>
+                    )}
                   </Text>
                 </div>
                 <div className="flex gap-2">
@@ -461,8 +481,30 @@ const ShopOrdersPage = () => {
                   <Text>
                     <strong>Email:</strong> {selectedOrder.email}
                   </Text>
+                  {selectedOrder.customer_id && (
+                    <Text className="text-xs text-ui-fg-subtle">
+                      Зареєстрований користувач (ID: {selectedOrder.customer_id})
+                    </Text>
+                  )}
+                  {!selectedOrder.customer_id && (
+                    <Text className="text-xs text-ui-fg-subtle">
+                      Гостьове замовлення
+                    </Text>
+                  )}
                 </div>
               </div>
+
+              {/* Коментар */}
+              {selectedOrder.comment && (
+                <div>
+                  <Heading level="h3" className="mb-2">
+                    Коментар клієнта
+                  </Heading>
+                  <div className="bg-ui-bg-subtle rounded-lg p-4">
+                    <Text className="whitespace-pre-wrap">{selectedOrder.comment}</Text>
+                  </div>
+                </div>
+              )}
 
               {/* Доставка */}
               <div>
@@ -486,13 +528,66 @@ const ShopOrdersPage = () => {
                       {selectedOrder.delivery_warehouse}
                     </Text>
                   )}
+                  {selectedOrder.delivery_address && (
+                    <Text>
+                      <strong>Адреса:</strong> {selectedOrder.delivery_address}
+                    </Text>
+                  )}
+                  <Text>
+                    <strong>Вартість доставки:</strong>{" "}
+                    {selectedOrder.delivery_price_type === "free"
+                      ? "Безкоштовно"
+                      : selectedOrder.delivery_price_type === "carrier"
+                        ? "За тарифами перевізника"
+                        : formatMoney(selectedOrder.delivery_price)}
+                  </Text>
+                </div>
+              </div>
+
+              {/* Оплата */}
+              <div>
+                <Heading level="h3" className="mb-2">
+                  Оплата
+                </Heading>
+                <div className="bg-ui-bg-subtle rounded-lg p-4 space-y-1">
+                  <Text>
+                    <strong>Спосіб:</strong>{" "}
+                    {PAYMENT_METHODS[selectedOrder.payment_method] ||
+                      selectedOrder.payment_method}
+                  </Text>
+                  <Text>
+                    <strong>Статус:</strong>{" "}
+                    {PAYMENT_STATUSES.find((s) => s.value === selectedOrder.payment_status)?.label ||
+                      selectedOrder.payment_status}
+                  </Text>
+                  {/* Дані юридичної особи */}
+                  {selectedOrder.company_name && (
+                    <>
+                      <div className="border-t border-ui-border-base mt-2 pt-2">
+                        <Text className="text-xs text-ui-fg-subtle mb-1">Юридична особа:</Text>
+                        <Text>
+                          <strong>Компанія:</strong> {selectedOrder.company_name}
+                        </Text>
+                        {selectedOrder.edrpou && (
+                          <Text>
+                            <strong>ЄДРПОУ:</strong> {selectedOrder.edrpou}
+                          </Text>
+                        )}
+                        {selectedOrder.company_address && (
+                          <Text>
+                            <strong>Адреса компанії:</strong> {selectedOrder.company_address}
+                          </Text>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Товари */}
               <div>
                 <Heading level="h3" className="mb-2">
-                  Товари
+                  Товари ({selectedOrder.items_count} шт.)
                 </Heading>
                 <div className="border border-ui-border-base rounded-lg overflow-hidden">
                   <table className="w-full">
@@ -516,15 +611,24 @@ const ShopOrdersPage = () => {
                       {selectedOrder.items.map((item) => (
                         <tr key={item.id} className="border-t border-ui-border-base">
                           <td className="p-3">
-                            <div>
-                              <Text className="font-medium">{item.title}</Text>
-                              {(item.size || item.firmness) && (
-                                <Text className="text-xs text-ui-fg-subtle">
-                                  {[item.size, item.firmness]
-                                    .filter(Boolean)
-                                    .join(" • ")}
-                                </Text>
+                            <div className="flex items-center gap-3">
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
+                                  className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                />
                               )}
+                              <div>
+                                <Text className="font-medium">{item.title}</Text>
+                                {(item.size || item.firmness) && (
+                                  <Text className="text-xs text-ui-fg-subtle">
+                                    {[item.size, item.firmness]
+                                      .filter(Boolean)
+                                      .join(" | ")}
+                                  </Text>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td className="p-3 text-center">{item.quantity}</td>
@@ -547,12 +651,27 @@ const ShopOrdersPage = () => {
                   <Text>Сума товарів:</Text>
                   <Text>{formatMoney(selectedOrder.subtotal)}</Text>
                 </div>
+                {selectedOrder.delivery_price > 0 && (
+                  <div className="flex justify-between mb-2">
+                    <Text>Доставка:</Text>
+                    <Text>{formatMoney(selectedOrder.delivery_price)}</Text>
+                  </div>
+                )}
                 {selectedOrder.discount_amount > 0 && (
                   <div className="flex justify-between mb-2 text-ui-fg-interactive">
                     <Text>
                       Знижка
-                      {selectedOrder.promo_code &&
-                        ` (${selectedOrder.promo_code})`}
+                      {selectedOrder.promo_code && (
+                        <>
+                          {" "}({selectedOrder.promo_code}
+                          {selectedOrder.promo_discount_type === "percentage" && selectedOrder.promo_discount_value
+                            ? ` — ${selectedOrder.promo_discount_value}%`
+                            : selectedOrder.promo_discount_type === "fixed" && selectedOrder.promo_discount_value
+                              ? ` — ${selectedOrder.promo_discount_value} ₴`
+                              : ""}
+                          )
+                        </>
+                      )}
                       :
                     </Text>
                     <Text>-{formatMoney(selectedOrder.discount_amount)}</Text>
@@ -563,6 +682,18 @@ const ShopOrdersPage = () => {
                   <Text>{formatMoney(selectedOrder.total)}</Text>
                 </div>
               </div>
+
+              {/* Примітки адміністратора */}
+              {selectedOrder.admin_notes && (
+                <div>
+                  <Heading level="h3" className="mb-2">
+                    Примітки адміністратора
+                  </Heading>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <Text className="whitespace-pre-wrap">{selectedOrder.admin_notes}</Text>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-ui-border-base flex justify-end">

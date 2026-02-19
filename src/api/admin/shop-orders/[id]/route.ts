@@ -25,6 +25,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         ...order,
         subtotal: Number(order.subtotal) / 100,
         discount_amount: Number(order.discount_amount) / 100,
+        delivery_price: Number(order.delivery_price) / 100,
         total: Number(order.total) / 100,
         items: order.items.map((item) => ({
           ...item,
@@ -84,6 +85,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
         ...updatedOrder,
         subtotal: Number(updatedOrder!.subtotal) / 100,
         discount_amount: Number(updatedOrder!.discount_amount) / 100,
+        delivery_price: Number(updatedOrder!.delivery_price) / 100,
         total: Number(updatedOrder!.total) / 100,
         items: updatedOrder!.items.map((item) => ({
           ...item,

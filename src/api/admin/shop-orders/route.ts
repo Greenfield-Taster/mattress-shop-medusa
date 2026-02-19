@@ -38,6 +38,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           // Конвертуємо суми з копійок в гривні
           subtotal: Number(order.subtotal) / 100,
           discount_amount: Number(order.discount_amount) / 100,
+          delivery_price: Number(order.delivery_price) / 100,
           total: Number(order.total) / 100,
           items: items.map((item) => ({
             ...item,
