@@ -290,7 +290,8 @@ export async function POST(
       }
     }
 
-    const serverTotal = Math.max(serverSubtotal - serverDiscount, 0)
+    const deliveryPriceKopecks = body.deliveryPrice != null ? Math.round(body.deliveryPrice * 100) : 0
+    const serverTotal = Math.max(serverSubtotal - serverDiscount, 0) + deliveryPriceKopecks
 
     // ===== СТВОРЕННЯ ЗАМОВЛЕННЯ =====
 
@@ -307,7 +308,7 @@ export async function POST(
       delivery_city_ref: body.deliveryCityRef || null,
       delivery_address: body.deliveryAddress || null,
       delivery_warehouse: body.deliveryWarehouse || null,
-      delivery_price: body.deliveryPrice != null ? Math.round(body.deliveryPrice * 100) : 0,
+      delivery_price: deliveryPriceKopecks,
       delivery_price_type: body.deliveryPriceType || "free",
 
       // Оплата
