@@ -89,6 +89,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     specs,
     is_new,
     discount_percent,
+    certificates,
     variants: variantPrices,
   } = req.body as any
 
@@ -202,6 +203,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       if (is_new !== undefined) updateData.is_new = is_new
       if (discount_percent !== undefined)
         updateData.discount_percent = discount_percent
+      if (certificates !== undefined) updateData.certificates = certificates
 
       if (Object.keys(updateData).length > 0) {
         logger.debug(`Updating mattress attributes ${mattressAttrId}`)

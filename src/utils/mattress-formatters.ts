@@ -34,6 +34,7 @@ export interface MattressAttributesData {
   description_main?: string
   description_care?: string
   specs?: string[] | Record<string, unknown>
+  certificates?: Array<{ title: string; image: string; description?: string }> | null
   is_new?: boolean
   discount_percent?: number
   product_type?: string | null

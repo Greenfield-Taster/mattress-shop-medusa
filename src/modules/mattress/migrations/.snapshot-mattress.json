@@ -112,6 +112,15 @@
           "nullable": true,
           "mappedType": "json"
         },
+        "certificates": {
+          "name": "certificates",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
+        },
         "is_new": {
           "name": "is_new",
           "type": "boolean",

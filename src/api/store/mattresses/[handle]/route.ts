@@ -86,6 +86,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         specs: attrs.specs || [],
       },
 
+      // Сертифікати
+      certificates: Array.isArray(attrs.certificates) ? attrs.certificates : [],
+
       // Варіанти згруповані по категоріях розмірів
       variantsByCategory: groupVariantsByCategory(product.variants),
 

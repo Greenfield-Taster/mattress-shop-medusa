@@ -28,6 +28,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     specs,
     is_new,
     discount_percent,
+    certificates,
     variants,
   } = req.body as any
 
@@ -100,6 +101,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       is_new: is_new || false,
       discount_percent: discount_percent || 0,
       product_type: product_type || null,
+      certificates: certificates || [],
     })
 
     // 5. Створюємо link між Product та MattressAttributes

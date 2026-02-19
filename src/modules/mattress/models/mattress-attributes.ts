@@ -54,6 +54,14 @@ export const MattressAttributes = model.define("mattress_attributes", {
    */
   specs: model.json().nullable(),
 
+  // ===== СЕРТИФІКАТИ =====
+
+  /**
+   * Сертифікати якості (масив об'єктів)
+   * Приклад: [{ title: "ISO 9001", image: "https://...", description: "..." }]
+   */
+  certificates: model.json().nullable(),
+
   // ===== ПРАПОРЦІ =====
   
   /** Новинка */
