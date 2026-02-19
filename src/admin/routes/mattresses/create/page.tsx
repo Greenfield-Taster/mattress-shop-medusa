@@ -15,7 +15,7 @@ import {
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState, useRef, useCallback } from "react"
-import { ArrowLeft, Photo, XMark } from "@medusajs/icons"
+import { ArrowLeft, Photo, XMark, Plus, Trash } from "@medusajs/icons"
 
 // ===== КОНСТАНТИ =====
 
@@ -123,6 +123,7 @@ const CreateMattressPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const certFileInputRef = useRef<HTMLInputElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -151,6 +152,10 @@ const CreateMattressPage = () => {
   // Опис (з шаблонів)
   const [descriptionMain, setDescriptionMain] = useState(DESCRIPTION_TEMPLATES.springless)
   const [descriptionCare, setDescriptionCare] = useState(CARE_TEMPLATE)
+
+  // Сертифікати
+  const [certificates, setCertificates] = useState<Array<{ title: string; image: string; description: string }>>([])
+  const [uploadingCertIndex, setUploadingCertIndex] = useState<number | null>(null)
 
   // Розміри та ціни
   const [sizePrices, setSizePrices] = useState<SizePrice[]>(
@@ -304,6 +309,57 @@ const CreateMattressPage = () => {
     setImages(prev => prev.filter((_, i) => i !== index))
   }
 
+  // ===== CERTIFICATES =====
+
+  const addCertificate = () => {
+    setCertificates(prev => [...prev, { title: "", image: "", description: "" }])
+  }
+
+  const removeCertificate = (index: number) => {
+    setCertificates(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const updateCertificate = (index: number, field: string, value: string) => {
+    setCertificates(prev =>
+      prev.map((cert, i) => (i === index ? { ...cert, [field]: value } : cert))
+    )
+  }
+
+  const handleCertImageClick = (index: number) => {
+    setUploadingCertIndex(index)
+    certFileInputRef.current?.click()
+  }
+
+  const handleCertFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || uploadingCertIndex === null) return
+    e.target.value = ""
+
+    try {
+      const formData = new FormData()
+      formData.append("files", file)
+
+      const response = await fetch("/admin/mattresses/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error("Upload failed")
+
+      const data = await response.json()
+      const url = data.urls?.[0]
+      if (url) {
+        updateCertificate(uploadingCertIndex, "image", url)
+        toast.success("Успіх", { description: "Зображення сертифіката завантажено" })
+      }
+    } catch (err: any) {
+      toast.error("Помилка", { description: err.message })
+    } finally {
+      setUploadingCertIndex(null)
+    }
+  }
+
   // ===== SUBMIT =====
 
   const handleSubmit = async () => {
@@ -350,6 +406,13 @@ const CreateMattressPage = () => {
           specs: generateSpecs(),
           is_new: isNew,
           discount_percent: discountPercent,
+          certificates: certificates
+            .filter(c => c.title.trim() && c.image)
+            .map(c => ({
+              title: c.title.trim(),
+              image: c.image,
+              ...(c.description.trim() ? { description: c.description.trim() } : {}),
+            })),
           variants: enabledSizes.map(sp => ({
             size: sp.size,
             price: sp.price,
@@ -790,8 +853,92 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
+        {/* Сертифікати */}
+        <Container className="divide-y p-0">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <Heading level="h2">Сертифікати</Heading>
+              <Button variant="secondary" onClick={addCertificate}>
+                <Plus className="mr-1" />
+                Додати сертифікат
+              </Button>
+            </div>
+
+            {certificates.length === 0 ? (
+              <Text className="text-gray-500">
+                Сертифікати не додані. Вкладка «Сертифікати» не буде показана на сторінці товару.
+              </Text>
+            ) : (
+              <div className="space-y-4">
+                {certificates.map((cert, index) => (
+                  <div
+                    key={index}
+                    className="border border-ui-border-base rounded-lg p-4 flex gap-4"
+                  >
+                    {/* Зображення сертифіката */}
+                    <div
+                      className="w-32 h-32 flex-shrink-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-gray-400 transition-colors"
+                      onClick={() => handleCertImageClick(index)}
+                    >
+                      {cert.image ? (
+                        <img
+                          src={cert.image}
+                          alt={cert.title || "Сертифікат"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <Plus className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                          <span className="text-xs text-gray-500">Фото</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Поля */}
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <Label>Назва сертифіката</Label>
+                        <Input
+                          value={cert.title}
+                          onChange={(e) => updateCertificate(index, "title", e.target.value)}
+                          placeholder="Наприклад: ISO 9001"
+                        />
+                      </div>
+                      <div>
+                        <Label>Опис (необов'язково)</Label>
+                        <Textarea
+                          rows={2}
+                          value={cert.description}
+                          onChange={(e) => updateCertificate(index, "description", e.target.value)}
+                          placeholder="Короткий опис сертифіката"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Видалити */}
+                    <button
+                      onClick={() => removeCertificate(index)}
+                      className="self-start p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
+                    >
+                      <Trash className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <input
+              ref={certFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCertFileSelect}
+              className="hidden"
+            />
+          </div>
+        </Container>
+
         {/* Actions */}
-        <Container className="p-0 sticky bottom-0 bg-white border-t shadow-lg">
+        <Container className="divide-y p-0 sticky bottom-0 border-t shadow-lg">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="text-sm text-gray-500">
               {withPriceCount === 0 && (

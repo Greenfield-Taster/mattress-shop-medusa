@@ -874,7 +874,7 @@ const EditMattressPage = () => {
       </Container>
 
       {/* Footer Actions (sticky) */}
-      <Container className="p-0 sticky bottom-0 bg-white border-t shadow-lg">
+      <Container className="divide-y p-0 sticky bottom-0 border-t shadow-lg">
         <div className="flex items-center justify-end px-6 py-4 gap-2">
           <Button 
             variant="secondary" 
