@@ -50,16 +50,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     // Перевіряємо чи є замовлення з цим email та продуктом
     try {
-      const orders = await orderService.listOrders({ email: normalizedEmail })
-      for (const order of orders) {
-        if (order.status === "delivered" || order.status === "shipping") {
-          const items = await orderService.listOrderItems({ order_id: order.id })
-          if (items.some((item: Record<string, any>) => item.product_id === product_id)) {
-            isVerifiedPurchase = true
-            break
-          }
-        }
-      }
+      isVerifiedPurchase = await orderService.hasVerifiedPurchase(normalizedEmail, product_id)
     } catch {
       // Помилка перевірки — продовжуємо без позначки
     }
