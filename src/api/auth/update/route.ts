@@ -12,7 +12,7 @@ interface UpdateProfileRequestBody {
 }
 
 /**
- * PUT /store/auth/update
+ * PUT /auth/update
  *
  * Оновлює профіль поточного авторизованого користувача.
  *

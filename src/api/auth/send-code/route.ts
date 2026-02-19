@@ -13,7 +13,7 @@ interface SendCodeRequestBody {
 }
 
 /**
- * POST /store/auth/send-code
+ * POST /auth/send-code
  *
  * Відправляє SMS код верифікації на вказаний номер телефону.
  *

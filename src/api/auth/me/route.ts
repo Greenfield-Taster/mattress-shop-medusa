@@ -4,7 +4,7 @@ import type CustomerModuleService from "../../../modules/customer/service"
 import { extractBearerToken, verifyToken } from "../../../utils/jwt"
 
 /**
- * GET /store/auth/me
+ * GET /auth/me
  *
  * Повертає дані поточного авторизованого користувача.
  *

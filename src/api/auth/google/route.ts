@@ -9,7 +9,7 @@ interface GoogleAuthRequestBody {
 }
 
 /**
- * POST /store/auth/google
+ * POST /auth/google
  *
  * Авторизація через Google OAuth.
  * Верифікує Google ID token і створює/оновлює користувача.

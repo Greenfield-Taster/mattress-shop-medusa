@@ -10,7 +10,7 @@ interface VerifyCodeRequestBody {
 }
 
 /**
- * POST /store/auth/verify-code
+ * POST /auth/verify-code
  *
  * Верифікує SMS код і повертає JWT токен.
  *
