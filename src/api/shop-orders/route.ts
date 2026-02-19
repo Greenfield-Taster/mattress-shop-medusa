@@ -6,16 +6,6 @@ import type CustomerModuleService from "../../modules/customer/service"
 import { extractBearerToken, verifyToken } from "../../utils/jwt"
 
 /**
- * Нормалізує телефон до останніх 9 цифр для порівняння
- * Це дозволяє порівнювати телефони в різних форматах:
- * +380333333334, 0333333334, 033 333 33 34 → 333333334
- */
-function normalizePhoneForComparison(phone: string): string {
-  const digits = phone.replace(/\D/g, "")
-  return digits.slice(-9)
-}
-
-/**
  * GET /shop-orders
  *
  * Отримує список замовлень авторизованого користувача.
@@ -64,21 +54,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     let ordersByPhone: Awaited<ReturnType<typeof orderService.getOrdersByPhone>> = []
 
     if (customerPhone) {
-      const customerPhoneNormalized = normalizePhoneForComparison(customerPhone)
-      const allOrders = await orderService.listOrders({}, { order: { created_at: "DESC" } })
-
-      for (const order of allOrders) {
-        if (order.phone) {
-          const orderPhoneNormalized = normalizePhoneForComparison(order.phone)
-
-          if (orderPhoneNormalized === customerPhoneNormalized) {
-            const orderWithItems = await orderService.getOrderWithItems(order.id)
-            if (orderWithItems) {
-              ordersByPhone.push(orderWithItems)
-            }
-          }
-        }
-      }
+      ordersByPhone = await orderService.getOrdersByPhone(customerPhone)
     }
 
     // Об'єднуємо результати, уникаючи дублікатів
@@ -129,8 +105,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       count: formattedOrders.length,
     })
   } catch (error: any) {
-    console.error("[shop-orders] Error fetching orders:", error)
-    console.error("[shop-orders] Error stack:", error.stack)
+    console.error("[shop-orders] Error fetching orders:", error.message)
     return res.status(500).json({
       success: false,
       error: "Помилка отримання замовлень",
