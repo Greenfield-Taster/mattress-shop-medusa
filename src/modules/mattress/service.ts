@@ -25,6 +25,7 @@ export interface CreateMattressAttributesDTO {
   is_new?: boolean
   discount_percent?: number
   product_type?: string | null
+  certificates?: { title: string; image: string; description?: string }[] | null
 }
 
 /**
@@ -44,6 +45,7 @@ export interface UpdateMattressAttributesDTO {
   is_new?: boolean
   discount_percent?: number
   product_type?: string | null
+  certificates?: { title: string; image: string; description?: string }[] | null
 }
 
 /**
