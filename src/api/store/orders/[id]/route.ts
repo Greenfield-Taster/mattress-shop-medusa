@@ -126,6 +126,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           order_number: order.order_number,
           status: order.status,
           payment_status: order.payment_status,
+          payment_method: order.payment_method,
 
           // Контактні дані (для відображення отримувача)
           contact_data: {
