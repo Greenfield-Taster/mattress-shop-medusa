@@ -79,23 +79,21 @@ class OrderModuleService extends MedusaService({
    * Формат: випадкове 8-значне число (10000000 - 99999999)
    */
   async generateOrderNumber(): Promise<string> {
-    let orderNumber: string
-    let isUnique = false
+    const MAX_ATTEMPTS = 100
 
-    // Генеруємо унікальний номер
-    while (!isUnique) {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       // Випадкове число від 10000000 до 99999999
       const randomNumber = Math.floor(10000000 + Math.random() * 90000000)
-      orderNumber = randomNumber.toString()
+      const orderNumber = randomNumber.toString()
 
       // Перевіряємо унікальність
       const existing = await this.listOrders({ order_number: orderNumber })
       if (existing.length === 0) {
-        isUnique = true
+        return orderNumber
       }
     }
 
-    return orderNumber!
+    throw new Error("Failed to generate unique order number after 100 attempts")
   }
 
   /**
@@ -254,6 +252,33 @@ class OrderModuleService extends MedusaService({
       status: "cancelled",
       admin_notes: reason || "Скасовано",
     })
+  }
+
+  /**
+   * Перевірити чи email має підтверджену покупку конкретного продукту.
+   * Шукає замовлення зі статусом delivered/shipping, що містять product_id.
+   */
+  async hasVerifiedPurchase(email: string, productId: string): Promise<boolean> {
+    // Знаходимо замовлення з відповідним email і статусом
+    const deliveredOrders = await this.listOrders(
+      { email, status: "delivered" },
+      { order: { created_at: "DESC" } }
+    )
+    const shippingOrders = await this.listOrders(
+      { email, status: "shipping" },
+      { order: { created_at: "DESC" } }
+    )
+
+    const orders = [...deliveredOrders, ...shippingOrders]
+
+    for (const order of orders) {
+      const items = await this.listOrderItems({ order_id: order.id })
+      if (items.some((item: Record<string, any>) => item.product_id === productId)) {
+        return true
+      }
+    }
+
+    return false
   }
 
   /**
