@@ -23,7 +23,7 @@ function getSecret(): string {
 /**
  * Генерувати JWT токен для користувача
  * @param userId - ID користувача
- * @param expiresIn - час життя токена (за замовчуванням 7 днів)
+ * @param expiresInSeconds - час життя токена (за замовчуванням 3 дні)
  */
 export function generateToken(userId: string, expiresInSeconds: number = 3 * 24 * 60 * 60): string {
   const payload: TokenPayload = { userId }
