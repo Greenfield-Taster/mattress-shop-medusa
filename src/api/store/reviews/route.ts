@@ -42,13 +42,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     // Спробуємо отримати customer_id з JWT
     const token = extractBearerToken(req.headers.authorization || "")
     if (token) {
-      try {
-        const payload = verifyToken(token) as { customerId?: string }
-        if (payload.customerId) {
-          customerId = payload.customerId
-        }
-      } catch {
-        // Невалідний токен — продовжуємо як гість
+      const payload = verifyToken(token)
+      if (payload?.userId) {
+        customerId = payload.userId
       }
     }
 
