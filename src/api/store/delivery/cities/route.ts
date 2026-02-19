@@ -29,6 +29,7 @@ async function fetchNovaPoshtaCities(query: string) {
   const response = await fetch(NOVA_POSHTA_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(10000),
     body: JSON.stringify({
       apiKey,
       modelName: "Address",
@@ -63,7 +64,9 @@ async function fetchDeliveryAutoCities(query: string) {
     cityName: query,
   })
 
-  const response = await fetch(`${DELIVERY_AUTO_API_URL}?${params}`)
+  const response = await fetch(`${DELIVERY_AUTO_API_URL}?${params}`, {
+    signal: AbortSignal.timeout(10000),
+  })
   const result = await response.json()
 
   if (result.status && result.data) {
@@ -86,7 +89,9 @@ async function fetchSatCities(query: string) {
     language: "uk",
   })
 
-  const response = await fetch(`${SAT_API_URL}/getTowns?${params}`)
+  const response = await fetch(`${SAT_API_URL}/getTowns?${params}`, {
+    signal: AbortSignal.timeout(10000),
+  })
   const result = await response.json()
 
   if (result.success === "true" && result.data) {

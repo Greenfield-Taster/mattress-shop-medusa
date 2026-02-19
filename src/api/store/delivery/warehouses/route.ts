@@ -45,6 +45,7 @@ async function fetchNovaPoshtaWarehouses(
   const response = await fetch(NOVA_POSHTA_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(10000),
     body: JSON.stringify({
       apiKey,
       modelName: "Address",
@@ -77,7 +78,9 @@ async function fetchDeliveryAutoWarehouses(cityId: string) {
     culture: "uk-UA",
   })
 
-  const response = await fetch(`${DELIVERY_AUTO_WAREHOUSES_URL}?${params}`)
+  const response = await fetch(`${DELIVERY_AUTO_WAREHOUSES_URL}?${params}`, {
+    signal: AbortSignal.timeout(10000),
+  })
   const result = await response.json()
 
   if (result.status && result.data) {
@@ -100,7 +103,9 @@ const SAT_BRANCHES_TTL = 24 * 60 * 60 * 1000 // 24 години
 async function fetchSatWarehouses(cityRef: string) {
   // Завантажуємо всі відділення один раз і кешуємо на 24 год
   if (!satBranchesCache.data || Date.now() - satBranchesCache.timestamp > SAT_BRANCHES_TTL) {
-    const response = await fetch(`${SAT_API_URL}/getRsp?language=uk`)
+    const response = await fetch(`${SAT_API_URL}/getRsp?language=uk`, {
+      signal: AbortSignal.timeout(10000),
+    })
     const result = await response.json()
 
     if (result.success === "true" && result.data) {
