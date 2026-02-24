@@ -13,11 +13,10 @@ import {
   Input,
 } from "@medusajs/ui"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { EllipsisHorizontal, PencilSquare, XCircle, CheckCircle, MagnifyingGlass } from "@medusajs/icons"
+import { EllipsisHorizontal, PencilSquare, XCircle, CheckCircle, MagnifyingGlass, Users } from "@medusajs/icons"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-// Типи
 interface ShopCustomer {
   id: string
   phone: string | null
@@ -31,7 +30,6 @@ interface ShopCustomer {
   updated_at: string
 }
 
-// Helpers
 const formatDate = (date: string | null): string => {
   if (!date) return "—"
   return new Date(date).toLocaleDateString("uk-UA", {
@@ -49,17 +47,12 @@ const getAuthMethod = (customer: ShopCustomer): string => {
   return "—"
 }
 
-/**
- * Список користувачів магазину
- * URL: /app/shop-customers
- */
 const ShopCustomersPage = () => {
   const queryClient = useQueryClient()
   const prompt = usePrompt()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Запит на отримання списку користувачів
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["shop-customers"],
     queryFn: async () => {
@@ -76,7 +69,6 @@ const ShopCustomersPage = () => {
     },
   })
 
-  // Мутація для зміни статусу активності
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
       const response = await fetch(`/admin/shop-customers/${id}`, {
@@ -108,7 +100,6 @@ const ShopCustomersPage = () => {
 
   const customers: ShopCustomer[] = data?.customers || []
 
-  // Фільтрація користувачів
   const filteredCustomers = customers.filter((customer) => {
     if (!searchQuery) return true
     const search = searchQuery.toLowerCase()
@@ -120,7 +111,6 @@ const ShopCustomersPage = () => {
     )
   })
 
-  // Зміна статусу
   const handleToggleActive = async (customer: ShopCustomer) => {
     const newStatus = !customer.is_active
     const action = newStatus ? "активувати" : "деактивувати"
@@ -142,7 +132,6 @@ const ShopCustomersPage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
@@ -154,7 +143,6 @@ const ShopCustomersPage = () => {
         </div>
       </Container>
 
-      {/* Search */}
       <Container className="p-0">
         <div className="px-6 py-4">
           <div className="relative max-w-md">
@@ -169,7 +157,6 @@ const ShopCustomersPage = () => {
         </div>
       </Container>
 
-      {/* Content */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           {isLoading ? (
@@ -217,7 +204,6 @@ const ShopCustomersPage = () => {
               <Table.Body>
                 {filteredCustomers.map((customer) => (
                   <Table.Row key={customer.id} className="hover:bg-gray-50">
-                    {/* Avatar placeholder */}
                     <Table.Cell>
                       <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden">
                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">
@@ -226,7 +212,6 @@ const ShopCustomersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Ім'я */}
                     <Table.Cell>
                       <div>
                         <Text className="font-medium">
@@ -238,7 +223,6 @@ const ShopCustomersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Контакт */}
                     <Table.Cell>
                       <div>
                         {customer.email && (
@@ -253,35 +237,30 @@ const ShopCustomersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Метод входу */}
                     <Table.Cell>
                       <Badge color={customer.google_id ? "blue" : "purple"}>
                         {getAuthMethod(customer)}
                       </Badge>
                     </Table.Cell>
 
-                    {/* Статус */}
                     <Table.Cell>
                       <Badge color={customer.is_active ? "green" : "red"}>
                         {customer.is_active ? "Активний" : "Деактивований"}
                       </Badge>
                     </Table.Cell>
 
-                    {/* Останній вхід */}
                     <Table.Cell>
                       <Text className="text-gray-500 text-sm">
                         {formatDate(customer.last_login_at)}
                       </Text>
                     </Table.Cell>
 
-                    {/* Дата реєстрації */}
                     <Table.Cell>
                       <Text className="text-gray-500 text-sm">
                         {formatDate(customer.created_at)}
                       </Text>
                     </Table.Cell>
 
-                    {/* Actions */}
                     <Table.Cell>
                       <DropdownMenu>
                         <DropdownMenu.Trigger asChild>
@@ -327,9 +306,9 @@ const ShopCustomersPage = () => {
   )
 }
 
-// Конфігурація роуту - додає пункт в sidebar
 export const config = defineRouteConfig({
   label: "Користувачі",
+  icon: Users,
 })
 
 export default ShopCustomersPage

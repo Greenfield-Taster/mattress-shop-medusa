@@ -18,6 +18,7 @@ import {
   CheckCircleSolid,
   XCircleSolid,
   Trash,
+  ChatBubble,
 } from "@medusajs/icons"
 import { useState } from "react"
 
@@ -331,6 +332,7 @@ const ReviewsPage = () => {
 
 export const config = defineRouteConfig({
   label: "Відгуки",
+  icon: ChatBubble,
 })
 
 export default ReviewsPage

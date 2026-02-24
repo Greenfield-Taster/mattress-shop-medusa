@@ -22,10 +22,10 @@ import {
   PencilSquare,
   Trash,
   MagnifyingGlass,
+  Tag,
 } from "@medusajs/icons"
 import { useState } from "react"
 
-// Типи
 interface PromoCode {
   id: string
   code: string
@@ -41,7 +41,6 @@ interface PromoCode {
   created_at: string
 }
 
-// Helpers
 const formatDiscount = (type: string, value: number): string => {
   if (type === "percentage") {
     return `${value}%`
@@ -90,10 +89,6 @@ const getStatusBadge = (promoCode: PromoCode) => {
   return <Badge color="green">Активний</Badge>
 }
 
-/**
- * Список промокодів
- * URL: /app/promo-codes
- */
 const PromoCodesPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -101,7 +96,6 @@ const PromoCodesPage = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [filterActive, setFilterActive] = useState<string>("")
 
-  // Запит на отримання списку промокодів
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["promo-codes"],
     queryFn: async () => {
@@ -118,7 +112,6 @@ const PromoCodesPage = () => {
     },
   })
 
-  // Мутація для видалення
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/admin/promo-codes/${id}`, {
@@ -142,7 +135,6 @@ const PromoCodesPage = () => {
     },
   })
 
-  // Мутація для зміни статусу
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const response = await fetch(`/admin/promo-codes/${id}`, {
@@ -170,7 +162,6 @@ const PromoCodesPage = () => {
 
   const promoCodes: PromoCode[] = data?.promo_codes || []
 
-  // Фільтрація промокодів
   const filteredPromoCodes = promoCodes.filter((pc) => {
     if (searchQuery) {
       const search = searchQuery.toLowerCase()
@@ -184,7 +175,6 @@ const PromoCodesPage = () => {
     return true
   })
 
-  // Видалення промокоду
   const handleDelete = async (id: string, code: string) => {
     const confirmed = await prompt({
       title: "Видалити промокод?",
@@ -202,7 +192,6 @@ const PromoCodesPage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
@@ -218,7 +207,6 @@ const PromoCodesPage = () => {
         </div>
       </Container>
 
-      {/* Search & Filter */}
       <Container className="p-0">
         <div className="px-6 py-4 flex items-center gap-4">
           <div className="relative max-w-md flex-1">
@@ -246,7 +234,6 @@ const PromoCodesPage = () => {
         </div>
       </Container>
 
-      {/* Content */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           {isLoading ? (
@@ -297,7 +284,6 @@ const PromoCodesPage = () => {
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => navigate(`/promo-codes/${promoCode.id}/edit`)}
                   >
-                    {/* Код */}
                     <Table.Cell>
                       <div>
                         <Text className="font-mono font-bold text-lg">
@@ -311,7 +297,6 @@ const PromoCodesPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Знижка */}
                     <Table.Cell>
                       <Badge
                         color={promoCode.discount_type === "percentage" ? "purple" : "blue"}
@@ -320,7 +305,6 @@ const PromoCodesPage = () => {
                       </Badge>
                     </Table.Cell>
 
-                    {/* Мін. сума */}
                     <Table.Cell>
                       {promoCode.min_order_amount > 0 ? (
                         <Text>{promoCode.min_order_amount / 100} грн</Text>
@@ -329,7 +313,6 @@ const PromoCodesPage = () => {
                       )}
                     </Table.Cell>
 
-                    {/* Використання */}
                     <Table.Cell>
                       <Text>
                         {promoCode.current_uses}
@@ -337,7 +320,6 @@ const PromoCodesPage = () => {
                       </Text>
                     </Table.Cell>
 
-                    {/* Період дії */}
                     <Table.Cell>
                       <div className="text-sm">
                         {promoCode.starts_at || promoCode.expires_at ? (
@@ -357,17 +339,14 @@ const PromoCodesPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Статус */}
                     <Table.Cell>{getStatusBadge(promoCode)}</Table.Cell>
 
-                    {/* Дата створення */}
                     <Table.Cell>
                       <Text className="text-gray-500 text-sm">
                         {formatDateTime(promoCode.created_at)}
                       </Text>
                     </Table.Cell>
 
-                    {/* Actions */}
                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenu.Trigger asChild>
@@ -415,9 +394,9 @@ const PromoCodesPage = () => {
   )
 }
 
-// Конфігурація роуту - додає пункт в sidebar
 export const config = defineRouteConfig({
   label: "Промокоди",
+  icon: Tag,
 })
 
 export default PromoCodesPage
