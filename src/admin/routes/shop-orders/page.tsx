@@ -11,6 +11,7 @@ import {
   toast,
   Toaster,
   Select,
+  usePrompt,
 } from "@medusajs/ui"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
@@ -21,7 +22,6 @@ import {
 } from "@medusajs/icons"
 import { useState } from "react"
 
-// Типи
 interface OrderItem {
   id: string
   title: string
@@ -67,7 +67,6 @@ interface Order {
   updated_at: string
 }
 
-// Статуси замовлення
 const ORDER_STATUSES = [
   { value: "pending", label: "Нове", color: "orange" as const },
   { value: "confirmed", label: "Підтверджено", color: "blue" as const },
@@ -105,7 +104,6 @@ const DELIVERY_PRICE_TYPES: Record<string, string> = {
   "carrier": "За тарифами перевізника",
 }
 
-// Helpers
 const formatDate = (date: string): string => {
   return new Date(date).toLocaleDateString("uk-UA", {
     day: "2-digit",
@@ -138,17 +136,13 @@ const getPaymentStatusBadge = (status: string) => {
   )
 }
 
-/**
- * Сторінка замовлень
- * URL: /app/shop-orders
- */
 const ShopOrdersPage = () => {
   const queryClient = useQueryClient()
+  const prompt = usePrompt()
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Запит на отримання замовлень
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["shop-orders", filterStatus],
     queryFn: async () => {
@@ -167,7 +161,6 @@ const ShopOrdersPage = () => {
     },
   })
 
-  // Мутація для оновлення статусу
   const updateStatusMutation = useMutation({
     mutationFn: async ({
       id,
@@ -202,7 +195,6 @@ const ShopOrdersPage = () => {
 
   const orders: Order[] = data?.orders || []
 
-  // Фільтрація замовлень (клієнтська)
   const filteredOrders = orders.filter((order) => {
     if (!searchQuery) return true
     const search = searchQuery.toLowerCase()
@@ -217,7 +209,6 @@ const ShopOrdersPage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
@@ -227,7 +218,6 @@ const ShopOrdersPage = () => {
             </Text>
           </div>
 
-          {/* Пошук та фільтр */}
           <div className="flex items-center gap-4">
             <div className="relative">
               <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -258,7 +248,6 @@ const ShopOrdersPage = () => {
         </div>
       </Container>
 
-      {/* Orders Table */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           {isLoading ? (
@@ -304,14 +293,12 @@ const ShopOrdersPage = () => {
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => setSelectedOrder(order)}
                   >
-                    {/* Номер */}
                     <Table.Cell>
                       <Text className="font-mono font-bold">
                         {order.order_number}
                       </Text>
                     </Table.Cell>
 
-                    {/* Клієнт */}
                     <Table.Cell>
                       <div>
                         <Text className="font-medium">{order.full_name}</Text>
@@ -321,12 +308,10 @@ const ShopOrdersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Товари */}
                     <Table.Cell>
                       <Text>{order.items_count} шт.</Text>
                     </Table.Cell>
 
-                    {/* Сума */}
                     <Table.Cell>
                       <div>
                         <Text className="font-bold">
@@ -340,7 +325,6 @@ const ShopOrdersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Доставка */}
                     <Table.Cell>
                       <div>
                         <Text className="text-sm">
@@ -355,7 +339,6 @@ const ShopOrdersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Оплата */}
                     <Table.Cell>
                       <div className="flex flex-col gap-1">
                         <Text className="text-xs">
@@ -366,17 +349,14 @@ const ShopOrdersPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Статус */}
                     <Table.Cell>{getStatusBadge(order.status)}</Table.Cell>
 
-                    {/* Дата */}
                     <Table.Cell>
                       <Text className="text-sm text-gray-500">
                         {formatDate(order.created_at)}
                       </Text>
                     </Table.Cell>
 
-                    {/* Actions */}
                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenu.Trigger asChild>
@@ -396,12 +376,20 @@ const ShopOrdersPage = () => {
                           {ORDER_STATUSES.map((status) => (
                             <DropdownMenu.Item
                               key={status.value}
-                              onClick={() =>
-                                updateStatusMutation.mutate({
-                                  id: order.id,
-                                  status: status.value,
+                              onClick={async () => {
+                                const confirmed = await prompt({
+                                  title: "Змінити статус?",
+                                  description: `Змінити статус замовлення ${order.order_number} на "${status.label}"?`,
+                                  confirmText: "Змінити",
+                                  cancelText: "Скасувати",
                                 })
-                              }
+                                if (confirmed) {
+                                  updateStatusMutation.mutate({
+                                    id: order.id,
+                                    status: status.value,
+                                  })
+                                }
+                              }}
                               disabled={order.status === status.value}
                             >
                               {status.label}
@@ -412,12 +400,20 @@ const ShopOrdersPage = () => {
                           {PAYMENT_STATUSES.map((status) => (
                             <DropdownMenu.Item
                               key={status.value}
-                              onClick={() =>
-                                updateStatusMutation.mutate({
-                                  id: order.id,
-                                  payment_status: status.value,
+                              onClick={async () => {
+                                const confirmed = await prompt({
+                                  title: "Змінити статус оплати?",
+                                  description: `Змінити статус оплати замовлення ${order.order_number} на "${status.label}"?`,
+                                  confirmText: "Змінити",
+                                  cancelText: "Скасувати",
                                 })
-                              }
+                                if (confirmed) {
+                                  updateStatusMutation.mutate({
+                                    id: order.id,
+                                    payment_status: status.value,
+                                  })
+                                }
+                              }}
                               disabled={order.payment_status === status.value}
                             >
                               {status.label}
@@ -434,7 +430,6 @@ const ShopOrdersPage = () => {
         </div>
       </Container>
 
-      {/* Order Detail Modal */}
       {selectedOrder && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
@@ -444,7 +439,6 @@ const ShopOrdersPage = () => {
             className="bg-ui-bg-base rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-auto m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="p-6 border-b border-ui-border-base">
               <div className="flex items-center justify-between">
                 <div>
@@ -466,7 +460,6 @@ const ShopOrdersPage = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Клієнт */}
               <div>
                 <Heading level="h3" className="mb-2">
                   Клієнт
@@ -494,7 +487,6 @@ const ShopOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Коментар */}
               {selectedOrder.comment && (
                 <div>
                   <Heading level="h3" className="mb-2">
@@ -506,7 +498,6 @@ const ShopOrdersPage = () => {
                 </div>
               )}
 
-              {/* Доставка */}
               <div>
                 <Heading level="h3" className="mb-2">
                   Доставка
@@ -544,7 +535,6 @@ const ShopOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Оплата */}
               <div>
                 <Heading level="h3" className="mb-2">
                   Оплата
@@ -560,7 +550,6 @@ const ShopOrdersPage = () => {
                     {PAYMENT_STATUSES.find((s) => s.value === selectedOrder.payment_status)?.label ||
                       selectedOrder.payment_status}
                   </Text>
-                  {/* Дані юридичної особи */}
                   {selectedOrder.company_name && (
                     <>
                       <div className="border-t border-ui-border-base mt-2 pt-2">
@@ -584,7 +573,6 @@ const ShopOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Товари */}
               <div>
                 <Heading level="h3" className="mb-2">
                   Товари ({selectedOrder.items_count} шт.)
@@ -645,7 +633,6 @@ const ShopOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Підсумок */}
               <div className="bg-ui-bg-subtle rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <Text>Сума товарів:</Text>
@@ -683,7 +670,6 @@ const ShopOrdersPage = () => {
                 </div>
               </div>
 
-              {/* Примітки адміністратора */}
               {selectedOrder.admin_notes && (
                 <div>
                   <Heading level="h3" className="mb-2">
@@ -711,7 +697,6 @@ const ShopOrdersPage = () => {
   )
 }
 
-// Конфігурація роуту
 export const config = defineRouteConfig({
   label: "Замовлення",
   icon: TruckFast,
