@@ -15,10 +15,9 @@ import {
 } from "@medusajs/ui"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
-import { PlusMini, EllipsisHorizontal, PencilSquare, Trash, Eye, MagnifyingGlass } from "@medusajs/icons"
+import { PlusMini, EllipsisHorizontal, PencilSquare, Trash, Eye, MagnifyingGlass, ShoppingBag } from "@medusajs/icons"
 import { useState } from "react"
 
-// Типи
 interface MattressAttributes {
   id: string
   height: number
@@ -45,7 +44,6 @@ interface Mattress {
   mattress_attributes: MattressAttributes | null
 }
 
-// Helpers
 const formatBlockType = (type: string): string => {
   const labels: Record<string, string> = {
     independent_spring: "Незалежний пружинний",
@@ -80,17 +78,12 @@ const formatDate = (date: string): string => {
   })
 }
 
-/**
- * Список матраців
- * URL: /app/mattresses
- */
 const MattressesPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const prompt = usePrompt()
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Запит на отримання списку матраців
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["mattresses"],
     queryFn: async () => {
@@ -107,7 +100,6 @@ const MattressesPage = () => {
     },
   })
 
-  // Мутація для видалення
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/admin/mattresses/${id}`, {
@@ -133,7 +125,6 @@ const MattressesPage = () => {
 
   const mattresses: Mattress[] = data?.mattresses || []
 
-  // Фільтрація матраців
   const filteredMattresses = mattresses.filter((m) => {
     if (!searchQuery) return true
     const search = searchQuery.toLowerCase()
@@ -143,7 +134,6 @@ const MattressesPage = () => {
     )
   })
 
-  // Видалення матраца
   const handleDelete = async (id: string, title: string) => {
     const confirmed = await prompt({
       title: "Видалити матрац?",
@@ -161,7 +151,6 @@ const MattressesPage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
       
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
@@ -180,7 +169,6 @@ const MattressesPage = () => {
         </div>
       </Container>
 
-      {/* Search */}
       <Container className="p-0">
         <div className="px-6 py-4">
           <div className="relative max-w-md">
@@ -195,7 +183,6 @@ const MattressesPage = () => {
         </div>
       </Container>
 
-      {/* Content */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           {isLoading ? (
@@ -245,9 +232,8 @@ const MattressesPage = () => {
                   <Table.Row 
                     key={mattress.id}
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => navigate(`/products/${mattress.id}`)}
+                    onClick={() => navigate(`/mattresses/${mattress.id}`)}
                   >
-                    {/* Thumbnail */}
                     <Table.Cell>
                       <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden">
                         {mattress.thumbnail ? (
@@ -264,7 +250,6 @@ const MattressesPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Назва */}
                     <Table.Cell>
                       <div>
                         <Text className="font-medium">{mattress.title}</Text>
@@ -272,7 +257,6 @@ const MattressesPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Характеристики */}
                     <Table.Cell>
                       {mattress.mattress_attributes ? (
                         <div className="flex flex-wrap gap-1">
@@ -291,19 +275,16 @@ const MattressesPage = () => {
                       )}
                     </Table.Cell>
 
-                    {/* Ціна */}
                     <Table.Cell>
                       <Text>{formatPrice(mattress.variants)}</Text>
                     </Table.Cell>
 
-                    {/* Кількість розмірів */}
                     <Table.Cell>
                       <Badge color="blue">
                         {mattress.variants?.length || 0}
                       </Badge>
                     </Table.Cell>
 
-                    {/* Статус */}
                     <Table.Cell>
                       <div className="flex gap-1">
                         <Badge color={mattress.status === "published" ? "green" : "grey"}>
@@ -320,14 +301,12 @@ const MattressesPage = () => {
                       </div>
                     </Table.Cell>
 
-                    {/* Дата */}
                     <Table.Cell>
                       <Text className="text-gray-500 text-sm">
                         {formatDate(mattress.created_at)}
                       </Text>
                     </Table.Cell>
 
-                    {/* Actions */}
                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenu.Trigger asChild>
@@ -336,8 +315,8 @@ const MattressesPage = () => {
                           </IconButton>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
-                          <DropdownMenu.Item 
-                            onClick={() => navigate(`/products/${mattress.id}`)}
+                          <DropdownMenu.Item
+                            onClick={() => navigate(`/mattresses/${mattress.id}`)}
                           >
                             <Eye className="mr-2" />
                             Переглянути
@@ -371,9 +350,9 @@ const MattressesPage = () => {
   )
 }
 
-// Конфігурація роуту - додає пункт в sidebar
 export const config = defineRouteConfig({
   label: "Матраци",
+  icon: ShoppingBag,
 })
 
 export default MattressesPage
