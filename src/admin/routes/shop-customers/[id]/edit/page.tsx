@@ -49,7 +49,6 @@ const EditCustomerPage = () => {
     is_active: true,
   })
 
-  // Fetch customer data
   const { data, isLoading, error } = useQuery({
     queryKey: ["shop-customer", id],
     queryFn: async () => {
@@ -67,7 +66,6 @@ const EditCustomerPage = () => {
     enabled: !!id,
   })
 
-  // Update form when data loads
   useEffect(() => {
     if (data?.customer) {
       const c = data.customer as ShopCustomer
@@ -81,7 +79,6 @@ const EditCustomerPage = () => {
     }
   }, [data])
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<FormData>) => {
       const response = await fetch(`/admin/shop-customers/${id}`, {
@@ -155,7 +152,6 @@ const EditCustomerPage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
@@ -174,11 +170,9 @@ const EditCustomerPage = () => {
         </div>
       </Container>
 
-      {/* Form */}
       <Container className="divide-y p-0">
         <form onSubmit={handleSubmit}>
           <div className="px-6 py-4 space-y-6">
-            {/* Avatar placeholder */}
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
@@ -187,7 +181,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
 
-            {/* Name fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="first_name">Ім'я</Label>
@@ -209,7 +202,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
 
-            {/* Contact fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email">Email</Label>
@@ -237,7 +229,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
 
-            {/* Status */}
             <div className="flex items-center justify-between py-4 border-t border-b">
               <div>
                 <Text className="font-medium">Статус акаунту</Text>
@@ -253,7 +244,6 @@ const EditCustomerPage = () => {
               />
             </div>
 
-            {/* Info */}
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
               <Text className="text-sm text-gray-500">
                 <strong>ID:</strong> {customer.id}
@@ -273,7 +263,6 @@ const EditCustomerPage = () => {
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"

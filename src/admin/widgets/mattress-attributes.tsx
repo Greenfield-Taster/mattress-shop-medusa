@@ -16,7 +16,6 @@ import { DetailWidgetProps, AdminProduct } from "@medusajs/framework/types"
 import { useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-// Константи
 const HARDNESS_OPTIONS = [
   { value: "H1", label: "H1 (м'який)" },
   { value: "H2", label: "H2 (нижче середньої)" },
@@ -58,17 +57,12 @@ interface MattressAttributes {
   discount_percent: number
 }
 
-/**
- * Widget для відображення та редагування атрибутів матраца
- * на сторінці деталей продукту
- */
 const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => {
   const queryClient = useQueryClient()
   const [attributes, setAttributes] = useState<MattressAttributes | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
 
-  // Форма редагування
   const [height, setHeight] = useState(20)
   const [hardness, setHardness] = useState("H3")
   const [blockType, setBlockType] = useState("independent_spring")
@@ -78,7 +72,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
   const [isNew, setIsNew] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
 
-  // Завантаження атрибутів
   useEffect(() => {
     const fetchAttributes = async () => {
       try {
@@ -112,7 +105,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     fetchAttributes()
   }, [data.id])
 
-  // Мутація для оновлення
   const updateMutation = useMutation({
     mutationFn: async (formData: any) => {
       const response = await fetch(`/admin/mattresses/${data.id}`, {
@@ -140,7 +132,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     },
   })
 
-  // Toggle filler
   const toggleFiller = (filler: string) => {
     setSelectedFillers(prev => 
       prev.includes(filler) 
@@ -149,7 +140,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     )
   }
 
-  // Зберегти зміни
   const handleSave = () => {
     updateMutation.mutate({
       height,
@@ -163,7 +153,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     })
   }
 
-  // Скасувати редагування
   const handleCancel = () => {
     if (attributes) {
       setHeight(attributes.height)
@@ -212,7 +201,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
     <Container className="divide-y p-0">
       <Toaster />
       
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
           <Heading level="h2">Атрибути матраца</Heading>
@@ -247,10 +235,8 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
         )}
       </div>
 
-      {/* Content */}
       <div className="px-6 py-4">
         {isEditing ? (
-          // Режим редагування
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
@@ -355,7 +341,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
             </div>
           </div>
         ) : (
-          // Режим перегляду
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <Text className="text-xs text-gray-500">Висота</Text>
@@ -403,7 +388,6 @@ const MattressAttributesWidget = ({ data }: DetailWidgetProps<AdminProduct>) => 
   )
 }
 
-// Конфігурація widget
 export const config = defineWidgetConfig({
   zone: "product.details.after",
 })

@@ -17,8 +17,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useState, useRef, useCallback } from "react"
 import { ArrowLeft, Photo, XMark, Plus, Trash } from "@medusajs/icons"
 
-// ===== КОНСТАНТИ =====
-
 const HARDNESS_OPTIONS = [
   { value: "H1", label: "H1 (м'який)" },
   { value: "H2", label: "H2 (нижче середньої)" },
@@ -59,7 +57,6 @@ const FILLER_OPTIONS = [
 
 // 29 стандартних розмірів (синхронізовано з MattressQuiz на фронтенді)
 const MATTRESS_SIZES = [
-  // Дитячі (8 розмірів)
   { size: "60×120", category: "Дитячий" },
   { size: "70×140", category: "Дитячий" },
   { size: "70×150", category: "Дитячий" },
@@ -68,7 +65,6 @@ const MATTRESS_SIZES = [
   { size: "70×180", category: "Дитячий" },
   { size: "70×190", category: "Дитячий" },
   { size: "70×200", category: "Дитячий" },
-  // Односпальні (8 розмірів)
   { size: "80×150", category: "Односпальний" },
   { size: "80×160", category: "Односпальний" },
   { size: "80×170", category: "Односпальний" },
@@ -77,10 +73,8 @@ const MATTRESS_SIZES = [
   { size: "80×200", category: "Односпальний" },
   { size: "90×190", category: "Односпальний" },
   { size: "90×200", category: "Односпальний" },
-  // Полуторні (2 розміри)
   { size: "120×190", category: "Полуторний" },
   { size: "120×200", category: "Полуторний" },
-  // Двоспальні (8 розмірів)
   { size: "140×190", category: "Двоспальний" },
   { size: "140×200", category: "Двоспальний" },
   { size: "150×190", category: "Двоспальний" },
@@ -89,14 +83,10 @@ const MATTRESS_SIZES = [
   { size: "160×200", category: "Двоспальний" },
   { size: "170×190", category: "Двоспальний" },
   { size: "170×200", category: "Двоспальний" },
-  // King Size (2 розміри)
   { size: "180×190", category: "King Size" },
   { size: "180×200", category: "King Size" },
-  // King Size XL (1 розмір)
   { size: "200×200", category: "King Size XL" },
 ]
-
-// ===== ШАБЛОНИ =====
 
 const DESCRIPTION_TEMPLATES: Record<string, string> = {
   springless: `Безпружинний матрац з сучасних матеріалів. Відсутність металевих елементів забезпечує безшумність та довговічність. Ідеально підходить для тих, хто цінує екологічні матеріали та природний комфорт.`,
@@ -109,15 +99,11 @@ const CARE_TEMPLATE = `Виконувати глибоку чистку дозв
 
 Рекомендується провітрювати матрац кожні 2-3 місяці та перевертати його для рівномірного зношування.`
 
-// ===== ТИПИ =====
-
 interface SizePrice {
   size: string
   price: number
   enabled: boolean
 }
-
-// ===== КОМПОНЕНТ =====
 
 const CreateMattressPage = () => {
   const navigate = useNavigate()
@@ -128,15 +114,12 @@ const CreateMattressPage = () => {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Основні дані
   const [title, setTitle] = useState("")
   const [handle, setHandle] = useState("")
   
-  // Зображення (URLs від сервера)
   const [images, setImages] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
   
-  // Характеристики
   const [height, setHeight] = useState(20)
   const [hardness, setHardness] = useState("H3")
   const [blockType, setBlockType] = useState("springless")
@@ -145,19 +128,15 @@ const CreateMattressPage = () => {
   const [selectedFillers, setSelectedFillers] = useState<string[]>(["latex"])
   const [productType, setProductType] = useState("springless")
   
-  // Прапорці
   const [isNew, setIsNew] = useState(false)
   const [discountPercent, setDiscountPercent] = useState(0)
 
-  // Опис (з шаблонів)
   const [descriptionMain, setDescriptionMain] = useState(DESCRIPTION_TEMPLATES.springless)
   const [descriptionCare, setDescriptionCare] = useState(CARE_TEMPLATE)
 
-  // Сертифікати
   const [certificates, setCertificates] = useState<Array<{ title: string; image: string; description: string }>>([])
   const [uploadingCertIndex, setUploadingCertIndex] = useState<number | null>(null)
 
-  // Розміри та ціни
   const [sizePrices, setSizePrices] = useState<SizePrice[]>(
     MATTRESS_SIZES.map(s => ({ 
       size: s.size, 
@@ -166,8 +145,6 @@ const CreateMattressPage = () => {
     }))
   )
   const [basePrice, setBasePrice] = useState(7990)
-
-  // ===== HANDLERS =====
 
   const handleTitleChange = (value: string) => {
     setTitle(value)
@@ -224,12 +201,9 @@ const CreateMattressPage = () => {
     )
   }
 
-  // ===== IMAGE UPLOAD =====
-
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return
 
-    // Фільтруємо тільки зображення
     const imageFiles = files.filter(f => f.type.startsWith("image/"))
     if (imageFiles.length === 0) {
       toast.error("Помилка", { description: "Дозволені тільки зображення" })
@@ -309,8 +283,6 @@ const CreateMattressPage = () => {
     setImages(prev => prev.filter((_, i) => i !== index))
   }
 
-  // ===== CERTIFICATES =====
-
   const addCertificate = () => {
     setCertificates(prev => [...prev, { title: "", image: "", description: "" }])
   }
@@ -359,8 +331,6 @@ const CreateMattressPage = () => {
       setUploadingCertIndex(null)
     }
   }
-
-  // ===== SUBMIT =====
 
   const handleSubmit = async () => {
     setError(null)
@@ -473,7 +443,6 @@ const CreateMattressPage = () => {
       <Toaster />
       <div className="flex flex-col gap-y-4 pb-8">
       
-        {/* Header */}
         <Container className="divide-y p-0">
           <div className="flex items-center gap-x-4 px-6 py-4">
             <Button variant="transparent" onClick={() => navigate("/mattresses")}>
@@ -486,14 +455,12 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Error */}
         {error && (
           <Container className="bg-red-50 border-red-200">
             <div className="px-6 py-4 text-red-700">{error}</div>
           </Container>
         )}
 
-        {/* Основна інформація */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <Heading level="h2" className="mb-4">Основна інформація</Heading>
@@ -540,12 +507,10 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Зображення */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <Heading level="h2" className="mb-4">Зображення</Heading>
             
-            {/* Drop zone */}
             <div
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
@@ -580,7 +545,6 @@ const CreateMattressPage = () => {
               )}
             </div>
 
-            {/* Список зображень */}
             {images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {images.map((url, index) => (
@@ -625,7 +589,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Характеристики */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <Heading level="h2" className="mb-4">Характеристики</Heading>
@@ -718,7 +681,6 @@ const CreateMattressPage = () => {
               </div>
             </div>
 
-            {/* Наповнювачі */}
             <div className="mt-6">
               <Label className="mb-2 block">Наповнювачі *</Label>
               <div className="flex flex-wrap gap-2">
@@ -737,7 +699,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Розміри та ціни */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between mb-4">
@@ -821,7 +782,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Опис */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <Heading level="h2" className="mb-4">Опис</Heading>
@@ -853,7 +813,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Сертифікати */}
         <Container className="divide-y p-0">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between mb-4">
@@ -875,7 +834,6 @@ const CreateMattressPage = () => {
                     key={index}
                     className="border border-ui-border-base rounded-lg p-4 flex gap-4"
                   >
-                    {/* Зображення сертифіката */}
                     <div
                       className="w-32 h-32 flex-shrink-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-gray-400 transition-colors"
                       onClick={() => handleCertImageClick(index)}
@@ -894,7 +852,6 @@ const CreateMattressPage = () => {
                       )}
                     </div>
 
-                    {/* Поля */}
                     <div className="flex-1 space-y-3">
                       <div>
                         <Label>Назва сертифіката</Label>
@@ -915,7 +872,6 @@ const CreateMattressPage = () => {
                       </div>
                     </div>
 
-                    {/* Видалити */}
                     <button
                       onClick={() => removeCertificate(index)}
                       className="self-start p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
@@ -937,7 +893,6 @@ const CreateMattressPage = () => {
           </div>
         </Container>
 
-        {/* Actions */}
         <Container className="divide-y p-0 sticky bottom-0 border-t shadow-lg">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="text-sm text-gray-500">

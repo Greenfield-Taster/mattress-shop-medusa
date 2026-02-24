@@ -31,7 +31,6 @@ interface PromoCode {
   created_at: string
 }
 
-// Конвертація дати для input datetime-local
 const formatDateForInput = (date: string | null): string => {
   if (!date) return ""
   const d = new Date(date)
@@ -40,16 +39,11 @@ const formatDateForInput = (date: string | null): string => {
   return localDate.toISOString().slice(0, 16)
 }
 
-/**
- * Форма редагування промокоду
- * URL: /app/promo-codes/:id/edit
- */
 const EditPromoCodePage = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const queryClient = useQueryClient()
 
-  // Стан форми
   const [code, setCode] = useState("")
   const [description, setDescription] = useState("")
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
@@ -60,7 +54,6 @@ const EditPromoCodePage = () => {
   const [expiresAt, setExpiresAt] = useState("")
   const [isActive, setIsActive] = useState(true)
 
-  // Запит на отримання промокоду
   const { data, isLoading, error } = useQuery({
     queryKey: ["promo-code", id],
     queryFn: async () => {
@@ -80,7 +73,6 @@ const EditPromoCodePage = () => {
 
   const promoCode: PromoCode | undefined = data?.promo_code
 
-  // Заповнюємо форму даними з API
   useEffect(() => {
     if (promoCode) {
       setCode(promoCode.code)
@@ -101,7 +93,6 @@ const EditPromoCodePage = () => {
     }
   }, [promoCode])
 
-  // Мутація для оновлення
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await fetch(`/admin/promo-codes/${id}`, {
@@ -132,7 +123,6 @@ const EditPromoCodePage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Валідація
     if (code.trim().length !== 6) {
       toast.error("Помилка", { description: "Код промокоду має містити рівно 6 символів" })
       return
@@ -150,7 +140,6 @@ const EditPromoCodePage = () => {
       return
     }
 
-    // Формуємо дані
     const data = {
       code: code.toUpperCase().trim(),
       description: description.trim() || null,
@@ -196,7 +185,6 @@ const EditPromoCodePage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-x-4">
@@ -218,11 +206,9 @@ const EditPromoCodePage = () => {
         </div>
       </Container>
 
-      {/* Form */}
       <Container className="divide-y p-0">
         <form onSubmit={handleSubmit} className="px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Код */}
             <div>
               <Label htmlFor="code">Код промокоду *</Label>
               <Input
@@ -235,7 +221,6 @@ const EditPromoCodePage = () => {
               />
             </div>
 
-            {/* Опис */}
             <div>
               <Label htmlFor="description">Опис</Label>
               <Input
@@ -247,7 +232,6 @@ const EditPromoCodePage = () => {
               />
             </div>
 
-            {/* Тип знижки */}
             <div>
               <Label htmlFor="discountType">Тип знижки *</Label>
               <Select
@@ -264,7 +248,6 @@ const EditPromoCodePage = () => {
               </Select>
             </div>
 
-            {/* Значення знижки */}
             <div>
               <Label htmlFor="discountValue">
                 {discountType === "percentage" ? "Відсоток знижки *" : "Сума знижки (грн) *"}
@@ -282,7 +265,6 @@ const EditPromoCodePage = () => {
               />
             </div>
 
-            {/* Мінімальна сума */}
             <div>
               <Label htmlFor="minOrderAmount">Мінімальна сума замовлення (грн)</Label>
               <Input
@@ -298,7 +280,6 @@ const EditPromoCodePage = () => {
               <Text className="text-xs text-gray-500 mt-1">0 = без обмежень</Text>
             </div>
 
-            {/* Ліміт використань */}
             <div>
               <Label htmlFor="maxUses">Максимум використань</Label>
               <Input
@@ -314,7 +295,6 @@ const EditPromoCodePage = () => {
               <Text className="text-xs text-gray-500 mt-1">0 = необмежено</Text>
             </div>
 
-            {/* Дата початку */}
             <div>
               <Label htmlFor="startsAt">Дата початку</Label>
               <Input
@@ -326,7 +306,6 @@ const EditPromoCodePage = () => {
               />
             </div>
 
-            {/* Дата закінчення */}
             <div>
               <Label htmlFor="expiresAt">Дата закінчення</Label>
               <Input
@@ -338,7 +317,6 @@ const EditPromoCodePage = () => {
               />
             </div>
 
-            {/* Активний */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-x-3">
                 <Switch
@@ -351,7 +329,6 @@ const EditPromoCodePage = () => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end gap-x-3 mt-8 pt-6 border-t">
             <Button
               type="button"

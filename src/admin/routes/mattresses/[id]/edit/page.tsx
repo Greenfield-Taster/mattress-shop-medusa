@@ -17,8 +17,6 @@ import { useState, useEffect, useRef } from "react"
 import { ArrowLeft, Plus, Trash } from "@medusajs/icons"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
-// ===== КОНСТАНТИ =====
-
 const HARDNESS_OPTIONS = [
   { value: "H1", label: "H1 (м'який)" },
   { value: "H2", label: "H2 (нижче середньої)" },
@@ -60,7 +58,6 @@ const STATUS_OPTIONS = [
   { value: "draft", label: "Чернетка" },
 ]
 
-// Типи
 interface VariantPrice {
   id: string
   title: string
@@ -72,8 +69,6 @@ interface ProductImage {
   url: string
 }
 
-// ===== КОМПОНЕНТ =====
-
 const EditMattressPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -81,19 +76,15 @@ const EditMattressPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const certFileInputRef = useRef<HTMLInputElement>(null)
 
-  // Прапорець чи форма ініціалізована
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Стан форми - основні
   const [title, setTitle] = useState("")
   const [status, setStatus] = useState("published")
   
-  // Стан форми - зображення
   const [images, setImages] = useState<ProductImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   
-  // Стан форми - атрибути
   const [height, setHeight] = useState(20)
   const [hardness, setHardness] = useState("H3")
   const [blockType, setBlockType] = useState("independent_spring")
@@ -106,14 +97,11 @@ const EditMattressPage = () => {
   const [descriptionMain, setDescriptionMain] = useState("")
   const [descriptionCare, setDescriptionCare] = useState("")
 
-  // Стан форми - сертифікати
   const [certificates, setCertificates] = useState<Array<{ title: string; image: string; description: string }>>([])
   const [uploadingCertIndex, setUploadingCertIndex] = useState<number | null>(null)
 
-  // Стан форми - ціни варіантів
   const [variantPrices, setVariantPrices] = useState<VariantPrice[]>([])
 
-  // Завантаження даних матраца
   const { data, isLoading, error } = useQuery({
     queryKey: ["mattress", id],
     queryFn: async () => {
@@ -130,19 +118,16 @@ const EditMattressPage = () => {
     enabled: !!id,
   })
 
-  // Скидаємо стан ініціалізації при зміні id матраца
   useEffect(() => {
     setIsInitialized(false)
   }, [id])
 
-  // Заповнення форми даними (при зміні data або після скидання isInitialized)
   useEffect(() => {
     if (data?.mattress && !isInitialized) {
       const m = data.mattress
       setTitle(m.title || "")
       setStatus(m.status || "published")
 
-      // Зображення
       if (m.images && m.images.length > 0) {
         setImages(m.images.map((img: any) => ({ id: img.id, url: img.url })))
       } else if (m.thumbnail) {
@@ -151,7 +136,6 @@ const EditMattressPage = () => {
         setImages([])
       }
 
-      // Атрибути матраца
       if (m.mattress_attributes) {
         setHeight(m.mattress_attributes.height || 20)
         setHardness(m.mattress_attributes.hardness || "H3")
@@ -174,7 +158,6 @@ const EditMattressPage = () => {
             : []
         )
       } else {
-        // Скидаємо до дефолтних значень якщо атрибутів немає
         setHeight(20)
         setHardness("H3")
         setBlockType("independent_spring")
@@ -189,7 +172,6 @@ const EditMattressPage = () => {
         setCertificates([])
       }
 
-      // Ціни варіантів
       if (m.variants) {
         const prices = m.variants.map((v: any) => ({
           id: v.id,
@@ -205,11 +187,9 @@ const EditMattressPage = () => {
     }
   }, [data, isInitialized])
 
-  // === Завантаження зображень ===
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return
 
-    // Валідація
     const imageFiles = files.filter(f => f.type.startsWith("image/"))
     if (imageFiles.length === 0) {
       toast.error("Помилка", { description: "Дозволені тільки зображення" })
@@ -240,7 +220,6 @@ const EditMattressPage = () => {
 
       const data = await response.json()
       
-      // Додаємо нові URL до списку
       const newImages = data.urls.map((url: string) => ({ url }))
       setImages(prev => [...prev, ...newImages])
       
@@ -254,14 +233,12 @@ const EditMattressPage = () => {
     }
   }
 
-  // File input change
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     uploadFiles(files)
-    e.target.value = "" // Reset input
+    e.target.value = ""
   }
 
-  // Drag & drop handlers
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -288,12 +265,10 @@ const EditMattressPage = () => {
     uploadFiles(files)
   }
 
-  // Видалення зображення
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index))
   }
 
-  // Мутація для оновлення
   const updateMutation = useMutation({
     mutationFn: async (formData: any) => {
       const response = await fetch(`/admin/mattresses/${id}`, {
@@ -312,10 +287,8 @@ const EditMattressPage = () => {
     },
     onSuccess: () => {
       toast.success("Успіх", { description: "Матрац оновлено" })
-      // Інвалідуємо кеш списку та конкретного матраца
       queryClient.invalidateQueries({ queryKey: ["mattresses"] })
       queryClient.invalidateQueries({ queryKey: ["mattress", id] })
-      // Redirect to list after successful save
       setTimeout(() => {
         navigate("/mattresses")
       }, 500)
@@ -325,7 +298,6 @@ const EditMattressPage = () => {
     },
   })
 
-  // Toggle filler
   const toggleFiller = (filler: string) => {
     setSelectedFillers(prev => 
       prev.includes(filler) 
@@ -334,14 +306,12 @@ const EditMattressPage = () => {
     )
   }
 
-  // Оновлення ціни варіанту
   const updateVariantPrice = (variantId: string, price: number) => {
     setVariantPrices(prev => 
       prev.map(vp => vp.id === variantId ? { ...vp, price } : vp)
     )
   }
 
-  // === Сертифікати ===
   const addCertificate = () => {
     setCertificates(prev => [...prev, { title: "", image: "", description: "" }])
   }
@@ -391,7 +361,6 @@ const EditMattressPage = () => {
     }
   }
 
-  // Збереження
   const handleSave = () => {
     if (!title.trim()) {
       toast.error("Помилка", { description: "Введіть назву матраца" })
@@ -432,7 +401,6 @@ const EditMattressPage = () => {
     })
   }
 
-  // Loading state
   if (isLoading || !isInitialized) {
     return (
       <Container className="p-6">
@@ -457,7 +425,6 @@ const EditMattressPage = () => {
       <Toaster />
       <div className="flex flex-col gap-y-4 pb-8">
       
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-x-4">
@@ -484,12 +451,10 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Зображення */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Зображення</Heading>
           
-          {/* Сітка зображень */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
             {images.map((img, index) => (
               <div 
@@ -505,14 +470,12 @@ const EditMattressPage = () => {
                   }}
                 />
                 
-                {/* Позначка головного зображення */}
                 {index === 0 && (
                   <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">
                     Головне
                   </div>
                 )}
                 
-                {/* Кнопка видалення */}
                 <button
                   onClick={() => removeImage(index)}
                   className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
@@ -522,7 +485,6 @@ const EditMattressPage = () => {
               </div>
             ))}
             
-            {/* Зона завантаження */}
             {images.length < 10 && (
               <div
                 className={`
@@ -570,7 +532,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Основна інформація */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Основна інформація</Heading>
@@ -620,7 +581,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Характеристики */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Характеристики</Heading>
@@ -713,7 +673,6 @@ const EditMattressPage = () => {
             </div>
           </div>
 
-          {/* Наповнювачі */}
           <div className="mt-6">
             <Label className="mb-2 block">Наповнювачі</Label>
             <div className="flex flex-wrap gap-2">
@@ -732,7 +691,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Ціни варіантів */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Розміри та ціни</Heading>
@@ -762,7 +720,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Опис */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2" className="mb-4">Опис</Heading>
@@ -789,7 +746,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Сертифікати */}
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -811,7 +767,6 @@ const EditMattressPage = () => {
                   key={index}
                   className="border border-ui-border-base rounded-lg p-4 flex gap-4"
                 >
-                  {/* Зображення сертифіката */}
                   <div
                     className="w-32 h-32 flex-shrink-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer overflow-hidden hover:border-gray-400 transition-colors"
                     onClick={() => handleCertImageClick(index)}
@@ -830,7 +785,6 @@ const EditMattressPage = () => {
                     )}
                   </div>
 
-                  {/* Поля */}
                   <div className="flex-1 space-y-3">
                     <div>
                       <Label>Назва сертифіката</Label>
@@ -851,7 +805,6 @@ const EditMattressPage = () => {
                     </div>
                   </div>
 
-                  {/* Видалити */}
                   <button
                     onClick={() => removeCertificate(index)}
                     className="self-start p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
@@ -873,7 +826,6 @@ const EditMattressPage = () => {
         </div>
       </Container>
 
-      {/* Footer Actions (sticky) */}
       <Container className="divide-y p-0 sticky bottom-0 border-t shadow-lg">
         <div className="flex items-center justify-end px-6 py-4 gap-2">
           <Button 

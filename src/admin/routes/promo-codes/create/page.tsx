@@ -15,15 +15,10 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { ArrowLeft } from "@medusajs/icons"
 
-/**
- * Форма створення промокоду
- * URL: /app/promo-codes/create
- */
 const CreatePromoCodePage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  // Стан форми
   const [code, setCode] = useState("")
   const [description, setDescription] = useState("")
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
@@ -34,7 +29,6 @@ const CreatePromoCodePage = () => {
   const [expiresAt, setExpiresAt] = useState("")
   const [isActive, setIsActive] = useState(true)
 
-  // Мутація для створення
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await fetch("/admin/promo-codes", {
@@ -64,7 +58,6 @@ const CreatePromoCodePage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Валідація
     if (code.trim().length !== 6) {
       toast.error("Помилка", { description: "Код промокоду має містити рівно 6 символів" })
       return
@@ -82,7 +75,6 @@ const CreatePromoCodePage = () => {
       return
     }
 
-    // Формуємо дані
     const data = {
       code: code.toUpperCase().trim(),
       description: description.trim() || null,
@@ -90,7 +82,7 @@ const CreatePromoCodePage = () => {
       discount_value:
         discountType === "percentage"
           ? discountValueNum
-          : Math.round(discountValueNum * 100), // Конвертуємо в копійки
+          : Math.round(discountValueNum * 100),
       min_order_amount: minOrderAmount
         ? Math.round(parseFloat(minOrderAmount) * 100)
         : 0,
@@ -107,7 +99,6 @@ const CreatePromoCodePage = () => {
     <div className="flex flex-col gap-y-4">
       <Toaster />
 
-      {/* Header */}
       <Container className="divide-y p-0">
         <div className="flex items-center gap-x-4 px-6 py-4">
           <Button variant="transparent" onClick={() => navigate("/promo-codes")}>
@@ -120,11 +111,9 @@ const CreatePromoCodePage = () => {
         </div>
       </Container>
 
-      {/* Form */}
       <Container className="divide-y p-0">
         <form onSubmit={handleSubmit} className="px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Код */}
             <div>
               <Label htmlFor="code">Код промокоду *</Label>
               <Input
@@ -140,7 +129,6 @@ const CreatePromoCodePage = () => {
               </Text>
             </div>
 
-            {/* Опис */}
             <div>
               <Label htmlFor="description">Опис</Label>
               <Input
@@ -152,7 +140,6 @@ const CreatePromoCodePage = () => {
               />
             </div>
 
-            {/* Тип знижки */}
             <div>
               <Label htmlFor="discountType">Тип знижки *</Label>
               <Select
@@ -169,7 +156,6 @@ const CreatePromoCodePage = () => {
               </Select>
             </div>
 
-            {/* Значення знижки */}
             <div>
               <Label htmlFor="discountValue">
                 {discountType === "percentage" ? "Відсоток знижки *" : "Сума знижки (грн) *"}
@@ -187,7 +173,6 @@ const CreatePromoCodePage = () => {
               />
             </div>
 
-            {/* Мінімальна сума */}
             <div>
               <Label htmlFor="minOrderAmount">Мінімальна сума замовлення (грн)</Label>
               <Input
@@ -205,7 +190,6 @@ const CreatePromoCodePage = () => {
               </Text>
             </div>
 
-            {/* Ліміт використань */}
             <div>
               <Label htmlFor="maxUses">Максимум використань</Label>
               <Input
@@ -223,7 +207,6 @@ const CreatePromoCodePage = () => {
               </Text>
             </div>
 
-            {/* Дата початку */}
             <div>
               <Label htmlFor="startsAt">Дата початку</Label>
               <Input
@@ -238,7 +221,6 @@ const CreatePromoCodePage = () => {
               </Text>
             </div>
 
-            {/* Дата закінчення */}
             <div>
               <Label htmlFor="expiresAt">Дата закінчення</Label>
               <Input
@@ -253,7 +235,6 @@ const CreatePromoCodePage = () => {
               </Text>
             </div>
 
-            {/* Активний */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-x-3">
                 <Switch
@@ -266,7 +247,6 @@ const CreatePromoCodePage = () => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end gap-x-3 mt-8 pt-6 border-t">
             <Button
               type="button"
