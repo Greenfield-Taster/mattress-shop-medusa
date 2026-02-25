@@ -13,7 +13,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       message: string
     }
 
-    const storeEmail = process.env.STORE_EMAIL || "info@just-sleep.com.ua"
+    const storeEmail = process.env.STORE_EMAIL
+    if (!storeEmail) {
+      return res.status(500).json({
+        success: false,
+        error: "STORE_EMAIL не налаштовано",
+      })
+    }
 
     const notificationService = req.scope.resolve<INotificationModuleService>(Modules.NOTIFICATION)
 

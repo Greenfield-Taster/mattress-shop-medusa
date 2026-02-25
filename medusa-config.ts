@@ -34,7 +34,6 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/review",
     },
-    // Notification module (Resend email provider)
     {
       resolve: "@medusajs/medusa/notification",
       options: {
@@ -45,7 +44,7 @@ module.exports = defineConfig({
             options: {
               channels: ["email"],
               api_key: process.env.RESEND_API_KEY,
-              from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+              from: process.env.RESEND_FROM_EMAIL,
             },
           },
         ],

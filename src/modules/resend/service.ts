@@ -1,6 +1,8 @@
 import { AbstractNotificationProviderService, MedusaError } from "@medusajs/framework/utils"
 import { Logger, ProviderSendNotificationDTO, ProviderSendNotificationResultsDTO } from "@medusajs/framework/types"
 import { Resend } from "resend"
+import { renderOrderPlacedEmail } from "./emails/order-placed"
+import { renderContactFormEmail } from "./emails/contact-form"
 
 type ResendOptions = {
   api_key: string
@@ -43,13 +45,11 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
 
     switch (template) {
       case "order-placed": {
-        const { renderOrderPlacedEmail } = await import("./emails/order-placed.js")
         subject = `Замовлення #${templateData.order_number} — Just Sleep`
         html = await renderOrderPlacedEmail(templateData)
         break
       }
       case "contact-form": {
-        const { renderContactFormEmail } = await import("./emails/contact-form.js")
         subject = `Нове повідомлення від ${templateData.name} — Just Sleep`
         html = await renderContactFormEmail(templateData)
         break
