@@ -138,6 +138,15 @@ const CreateReviewSchema = z.object({
   comment: z.string().min(10, "Відгук має містити мінімум 10 символів").max(1000, "Відгук має містити максимум 1000 символів"),
 })
 
+// ===== CONTACT FORM SCHEMA =====
+
+const ContactFormSchema = z.object({
+  name: z.string().min(2, "Ім'я має містити мінімум 2 символи").max(50),
+  phone: z.string().min(10, "Номер телефону занадто короткий"),
+  email: z.string().email("Невірний формат email"),
+  message: z.string().min(10, "Повідомлення має містити мінімум 10 символів").max(500),
+})
+
 // ===== AUTH SCHEMAS =====
 
 const SendCodeSchema = z.object({
@@ -217,6 +226,14 @@ const reviewRateLimit = rateLimit({
   message: { error: "Забагато відгуків. Спробуйте через 15 хвилин" },
 })
 
+const contactRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато повідомлень. Спробуйте через 15 хвилин" },
+})
+
 // CORS налаштування для кастомних роутів
 const storeCorsOptions = {
   origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
@@ -256,6 +273,17 @@ export default defineMiddlewares({
       method: "POST",
       matcher: "/store/reviews",
       middlewares: [reviewRateLimit, validateAndTransformBody(CreateReviewSchema)],
+    },
+
+    // ===== CONTACT FORM =====
+    {
+      matcher: "/store/contact",
+      middlewares: [cors(storeCorsOptions)],
+    },
+    {
+      method: "POST",
+      matcher: "/store/contact",
+      middlewares: [contactRateLimit, validateAndTransformBody(ContactFormSchema)],
     },
 
     // ===== MATTRESS ROUTES =====

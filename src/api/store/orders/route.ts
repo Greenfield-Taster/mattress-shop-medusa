@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { INotificationModuleService } from "@medusajs/framework/types"
 import { SHOP_ORDER_MODULE } from "../../../modules/order"
 import type OrderModuleService from "../../../modules/order/service"
 import { CUSTOMER_MODULE } from "../../../modules/customer"
@@ -352,6 +353,42 @@ export async function POST(
 
     // Створюємо замовлення з товарами
     const order = await orderService.createOrderWithItems(orderData, orderItems)
+
+    // Fire-and-forget: send order confirmation email
+    try {
+      const notificationService = req.scope.resolve<INotificationModuleService>(Modules.NOTIFICATION)
+
+      await notificationService.createNotifications([{
+        to: orderData.email,
+        channel: "email",
+        template: "order-placed",
+        data: {
+          order_number: order.order_number,
+          full_name: orderData.full_name,
+          email: orderData.email,
+          items: orderItems.map(item => ({
+            title: item.title,
+            size: item.size,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.total,
+          })),
+          subtotal: serverSubtotal,
+          discount_amount: serverDiscount,
+          delivery_price: deliveryPriceKopecks,
+          delivery_price_type: body.deliveryPriceType || "free",
+          total: serverTotal,
+          delivery_method: body.deliveryMethod,
+          delivery_city: body.deliveryCity || null,
+          delivery_warehouse: body.deliveryWarehouse || null,
+          delivery_address: body.deliveryAddress || null,
+          payment_method: body.paymentMethod,
+          promo_code: body.promoCode?.code || null,
+        },
+      }])
+    } catch (emailError: any) {
+      console.error("[orders] Failed to send confirmation email:", emailError.message)
+    }
 
     // ===== ВІДПОВІДЬ =====
 
