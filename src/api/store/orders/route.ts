@@ -7,7 +7,7 @@ import { CUSTOMER_MODULE } from "../../../modules/customer"
 import type CustomerModuleService from "../../../modules/customer/service"
 import { PROMO_CODE_MODULE } from "../../../modules/promo-code"
 import type PromoCodeModuleService from "../../../modules/promo-code/service"
-import { extractBearerToken, verifyToken } from "../../../utils/jwt"
+import { extractBearerToken, verifyToken, generateToken } from "../../../utils/jwt"
 import { normalizePhoneNumber } from "../../../services/sms"
 import { calculateDiscountedPrice } from "../../../utils/mattress-formatters"
 
@@ -205,16 +205,15 @@ export async function POST(
 
     // ===== СТВОРЕННЯ АКАУНТУ (якщо вибрано) =====
 
+    let createdCustomer: any = null
+
     if (!customerId && body.contactData.createAccount) {
       try {
-        // Нормалізуємо телефон до формату 0XXXXXXXXX
         const normalizedPhone = normalizePhoneNumber(body.contactData.phone)
 
-        // Перевіряємо чи не існує вже
         let customer = await customerService.findByPhone(normalizedPhone)
 
         if (!customer) {
-          // Створюємо нового користувача
           const nameParts = body.contactData.fullName.trim().split(" ")
           customer = await customerService.createCustomer({
             phone: normalizedPhone,
@@ -225,9 +224,9 @@ export async function POST(
         }
 
         customerId = customer.id
+        createdCustomer = customer
       } catch (error) {
         console.error("[orders] Error creating customer:", error)
-        // Продовжуємо без створення акаунту
       }
     }
 
@@ -392,18 +391,31 @@ export async function POST(
 
     // ===== ВІДПОВІДЬ =====
 
-    return res.status(201).json({
+    const response: Record<string, any> = {
       success: true,
       order: {
         id: order.id,
         order_number: order.order_number,
         status: order.status,
         payment_status: order.payment_status,
-        total: order.total / 100, // Повертаємо в гривнях
+        total: order.total / 100,
         created_at: order.created_at,
       },
       message: "Замовлення успішно створено",
-    })
+    }
+
+    if (createdCustomer) {
+      response.token = generateToken(createdCustomer.id)
+      response.user = {
+        id: createdCustomer.id,
+        phone: createdCustomer.phone,
+        email: createdCustomer.email,
+        firstName: createdCustomer.first_name,
+        lastName: createdCustomer.last_name,
+      }
+    }
+
+    return res.status(201).json(response)
   } catch (error: any) {
     console.error("[orders] Error creating order:", error)
     return res.status(500).json({
