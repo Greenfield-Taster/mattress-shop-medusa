@@ -1,10 +1,14 @@
 /**
- * SMS Service
+ * SMS Service — TurboSMS
  *
- * Для відправки SMS потрібно налаштувати Twilio:
- * 1. npm install twilio
- * 2. Встановити env змінні: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+ * Env змінні:
+ * - TURBOSMS_API_KEY — API токен з особистого кабінету TurboSMS
+ * - TURBOSMS_SENDER — зареєстроване ім'я відправника (альфа-ім'я)
+ *
+ * Без цих змінних сервіс працює в mock-режимі (логує код в консоль).
  */
+
+const TURBOSMS_API_URL = "https://api.turbosms.ua/message/send.json"
 
 /**
  * Генерувати 6-значний код верифікації
@@ -14,9 +18,23 @@ export function generateVerificationCode(): string {
 }
 
 /**
- * Відправити SMS з кодом верифікації
+ * Конвертувати номер 0XXXXXXXXX → 380XXXXXXXXX для TurboSMS API
+ */
+function toInternationalFormat(phone: string): string {
+  const cleaned = phone.replace(/\D/g, "")
+  if (cleaned.startsWith("0")) {
+    return "38" + cleaned
+  }
+  if (cleaned.startsWith("380")) {
+    return cleaned
+  }
+  return "380" + cleaned
+}
+
+/**
+ * Відправити SMS з кодом верифікації через TurboSMS
  *
- * @param phone - номер телефону
+ * @param phone - номер телефону (формат 0XXXXXXXXX)
  * @param code - код верифікації
  * @returns true якщо відправлено успішно
  */
@@ -24,27 +42,64 @@ export async function sendVerificationSms(
   phone: string,
   code: string
 ): Promise<boolean> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID
-  const authToken = process.env.TWILIO_AUTH_TOKEN
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER
+  const apiKey = process.env.TURBOSMS_API_KEY
+  const sender = process.env.TURBOSMS_SENDER
 
-  if (!accountSid || !authToken || !fromNumber) {
+  if (!apiKey || !sender) {
     console.log(`[SMS] Verification code for ${phone}: ${code}`)
     console.warn(
-      "[SMS] SMS provider not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER to send real SMS."
+      "[SMS] TurboSMS not configured. Set TURBOSMS_API_KEY and TURBOSMS_SENDER to send real SMS."
     )
     return true
   }
 
-  try {
-    const twilio = require("twilio")
-    const client = twilio(accountSid, authToken)
+  const recipient = toInternationalFormat(phone)
 
-    await client.messages.create({
-      body: `Ваш код підтвердження: ${code}`,
-      from: fromNumber,
-      to: `+38${phone.replace(/^0/, "")}`,
+  try {
+    const response = await fetch(TURBOSMS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        recipients: [recipient],
+        sms: {
+          sender,
+          text: `Ваш код підтвердження: ${code}`,
+        },
+      }),
     })
+
+    const data = await response.json()
+
+    // Success codes: 0 (OK), 800 (accepted), 801 (sent), 802/803 (partial)
+    const successCodes = [0, 800, 801, 802, 803]
+
+    if (!successCodes.includes(data.response_code)) {
+      console.error(
+        `[SMS] TurboSMS error [${data.response_code}]: ${data.response_status}`,
+        data.response_result
+      )
+      return false
+    }
+
+    // Check per-recipient status
+    if (Array.isArray(data.response_result)) {
+      const result = data.response_result[0]
+      if (result && result.response_code !== 0) {
+        console.error(
+          `[SMS] TurboSMS recipient error [${result.response_code}]: ${result.response_status}`,
+          result.phone
+        )
+        return false
+      }
+      console.log(
+        `[SMS] Sent verification SMS to ${recipient}, message_id: ${result?.message_id}`
+      )
+    } else {
+      console.log(`[SMS] Sent verification SMS to ${recipient}`)
+    }
 
     return true
   } catch (error) {
