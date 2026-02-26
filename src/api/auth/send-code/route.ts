@@ -54,8 +54,8 @@ export async function POST(
     // Генеруємо код верифікації
     const code = generateVerificationCode()
 
-    // Зберігаємо код з TTL 5 хвилин
-    await customerService.saveVerificationCode(customer.id, code, 5)
+    // Зберігаємо код з TTL 10 хвилин (TODO: змінити на 5 для продакшену)
+    await customerService.saveVerificationCode(customer.id, code, 10)
 
     // Відправляємо SMS
     const sent = await sendVerificationSms(normalizedPhone, code)
@@ -69,7 +69,7 @@ export async function POST(
 
     return res.status(200).json({
       success: true,
-      expiresIn: 300, // 5 хвилин в секундах
+      expiresIn: 600, // 10 хвилин в секундах
     })
   } catch (error) {
     console.error("[auth/send-code] Error:", error)
