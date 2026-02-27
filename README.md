@@ -1,62 +1,94 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa
-</h1>
+# Just Sleep — Backend API
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+MedusaJS v2 backend for the Just Sleep mattress e-commerce store.
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+## Stack
 
-## Compatibility
+- **Runtime:** Node.js 20+
+- **Framework:** MedusaJS 2.10.3
+- **Database:** PostgreSQL
+- **ORM:** MikroORM
+- **Language:** TypeScript
+- **Email:** Resend + React Email
+- **SMS:** TurboSMS
+- **Payments:** WayForPay
 
-This starter is compatible with versions >= 2 of `@medusajs/medusa`. 
+## Setup
 
-## Getting Started
+```bash
+# Install dependencies
+npm install
 
-Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+# Create .env from template
+cp .env.template .env
+# Fill in required values: DATABASE_URL, JWT_SECRET, COOKIE_SECRET
 
-Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+# Run migrations
+npx medusa db:migrate
 
-## What is Medusa
+# Seed initial data (store, currency, shipping)
+npm run seed
 
-Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
+# Start dev server
+npm run dev
+```
 
-Learn more about [Medusa’s architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
+Dev server runs at `http://localhost:9000`.
 
-## Community & Contributions
+## Commands
 
-The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server with hot reload |
+| `npm run build` | Build for production |
+| `npm start` | Start production server |
+| `npm run seed` | Seed store data |
+| `npx medusa db:migrate` | Run migrations |
+| `npx medusa db:generate <module>` | Generate migration |
 
-Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
+## Custom Modules
 
-## Other channels
+| Module | Description |
+|--------|-------------|
+| `mattress` | Product attributes (type, hardness, fillers, etc.) |
+| `customer` | Phone auth, Google OAuth, verification codes |
+| `order` | Orders with 8-digit numbers, line items |
+| `promo-code` | Percentage/fixed discounts, usage limits, date ranges |
+| `review` | Ratings, moderation, admin management |
+| `resend` | Email notification provider with React Email templates |
 
-- [GitHub Issues](https://github.com/medusajs/medusa/issues)
-- [Twitter](https://twitter.com/medusajs)
-- [LinkedIn](https://www.linkedin.com/company/medusajs)
-- [Medusa Blog](https://medusajs.com/blog/)
+## API Routes
+
+### Store (`/store/*`)
+- `GET /store/mattresses` — Product list with filtering, sorting, pagination
+- `GET /store/mattresses/:handle` — Product detail
+- `GET /store/mattresses/popular` — Popular products
+- `POST /store/orders` — Create order
+- `GET /store/orders/:id` — Order detail
+- `POST /store/promo-codes` — Validate promo code
+- `POST /store/contact` — Contact form
+- `GET /store/delivery/cities` — City search (Nova Poshta, Delivery Auto, SAT)
+- `GET /store/delivery/warehouses` — Warehouse search
+- `GET /store/reviews/:productId` — Product reviews
+- `POST /store/reviews` — Create review
+- `POST /store/payments/webhook` — WayForPay webhook
+- `POST /store/payments/initiate/:id` — Retry payment
+
+### Auth (`/auth/*`)
+- `POST /auth/send-code` — Send SMS code
+- `POST /auth/verify-code` — Verify code, get JWT
+- `POST /auth/google` — Google OAuth login
+- `GET /auth/me` — Current user
+- `PUT /auth/update` — Update profile
+- `POST /auth/refresh` — Refresh JWT
+
+### Admin (`/admin/*`)
+Full CRUD for mattresses, promo codes, customers, orders, reviews.
+
+## Environment Variables
+
+See `.env.template` for all required and optional variables.
+
+## Frontend
+
+Frontend counterpart: [mattress-shop](https://github.com/Greenfield-Taster/mattress-shop)
