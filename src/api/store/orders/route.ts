@@ -10,6 +10,7 @@ import type PromoCodeModuleService from "../../../modules/promo-code/service"
 import { extractBearerToken, verifyToken, generateToken } from "../../../utils/jwt"
 import { normalizePhoneNumber } from "../../../services/sms"
 import { calculateDiscountedPrice } from "../../../utils/mattress-formatters"
+import { buildPaymentData } from "../../../utils/wayforpay"
 
 // Вимикаємо вбудовану авторизацію MedusaJS - використовуємо власну JWT авторизацію
 export const AUTHENTICATE = false
@@ -313,7 +314,7 @@ export async function POST(
 
       // Оплата
       payment_method: body.paymentMethod,
-      payment_status: "pending" as const,
+      payment_status: (body.paymentMethod === "card-online" ? "pending_payment" : "pending") as string,
 
       // Дані для юридичних осіб
       company_name: body.paymentData?.companyName || null,
@@ -353,40 +354,80 @@ export async function POST(
     // Створюємо замовлення з товарами
     const order = await orderService.createOrderWithItems(orderData, orderItems)
 
-    // Fire-and-forget: send order confirmation email
-    try {
-      const notificationService = req.scope.resolve<INotificationModuleService>(Modules.NOTIFICATION)
+    // Build WayForPay payment data for card-online
+    let paymentData = null
+    if (body.paymentMethod === "card-online") {
+      try {
+        const nameParts = (body.contactData.fullName || "").split(" ")
+        const firstName = nameParts[0] || ""
+        const lastName = nameParts.slice(1).join(" ") || ""
 
-      await notificationService.createNotifications([{
-        to: orderData.email,
-        channel: "email",
-        template: "order-placed",
-        data: {
-          order_number: order.order_number,
-          full_name: orderData.full_name,
-          email: orderData.email,
-          items: orderItems.map(item => ({
-            title: item.title,
-            size: item.size,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total: item.total,
-          })),
-          subtotal: serverSubtotal,
-          discount_amount: serverDiscount,
-          delivery_price: deliveryPriceKopecks,
-          delivery_price_type: body.deliveryPriceType || "free",
-          total: serverTotal,
-          delivery_method: body.deliveryMethod,
-          delivery_city: body.deliveryCity || null,
-          delivery_warehouse: body.deliveryWarehouse || null,
-          delivery_address: body.deliveryAddress || null,
-          payment_method: body.paymentMethod,
-          promo_code: body.promoCode?.code || null,
-        },
-      }])
-    } catch (emailError: any) {
-      console.error("[orders] Failed to send confirmation email:", emailError.message)
+        const productNames = orderItems.map(
+          (item) => item.title || "Товар"
+        )
+        const productCounts = orderItems.map((item) => item.quantity)
+        const productPrices = orderItems.map(
+          (item) => Math.round(item.total / 100)
+        )
+
+        const amountUAH = Math.round(serverTotal / 100)
+        const serviceUrl = process.env.WAYFORPAY_SERVICE_URL || undefined
+
+        paymentData = buildPaymentData({
+          orderReference: order.order_number,
+          orderDate: Math.floor(Date.now() / 1000),
+          amount: amountUAH,
+          currency: "UAH",
+          productNames,
+          productCounts,
+          productPrices,
+          clientFirstName: firstName,
+          clientLastName: lastName,
+          clientEmail: body.contactData.email || "",
+          clientPhone: normalizedPhone.replace(/^0/, "380"),
+          serviceUrl,
+        })
+      } catch (paymentError: any) {
+        console.error("[orders] Error building payment data:", paymentError)
+      }
+    }
+
+    // Fire-and-forget: send order confirmation email (skip for card-online — sent by webhook after payment)
+    if (body.paymentMethod !== "card-online") {
+      try {
+        const notificationService = req.scope.resolve<INotificationModuleService>(Modules.NOTIFICATION)
+
+        await notificationService.createNotifications([{
+          to: orderData.email,
+          channel: "email",
+          template: "order-placed",
+          data: {
+            order_number: order.order_number,
+            full_name: orderData.full_name,
+            email: orderData.email,
+            items: orderItems.map(item => ({
+              title: item.title,
+              size: item.size,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total: item.total,
+            })),
+            subtotal: serverSubtotal,
+            discount_amount: serverDiscount,
+            delivery_price: deliveryPriceKopecks,
+            delivery_price_type: body.deliveryPriceType || "free",
+            total: serverTotal,
+            delivery_method: body.deliveryMethod,
+            delivery_city: body.deliveryCity || null,
+            delivery_warehouse: body.deliveryWarehouse || null,
+            delivery_address: body.deliveryAddress || null,
+            payment_method: body.paymentMethod,
+            promo_code: body.promoCode?.code || null,
+          },
+        }])
+      } catch (emailError: any) {
+        console.error("[orders] Failed to send confirmation email:", emailError.message)
+      }
     }
 
     // ===== ВІДПОВІДЬ =====
@@ -401,6 +442,7 @@ export async function POST(
         total: order.total / 100,
         created_at: order.created_at,
       },
+      paymentData,
       message: "Замовлення успішно створено",
     }
 
