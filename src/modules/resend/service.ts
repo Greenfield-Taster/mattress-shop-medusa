@@ -3,6 +3,7 @@ import { Logger, ProviderSendNotificationDTO, ProviderSendNotificationResultsDTO
 import { Resend } from "resend"
 import { renderOrderPlacedEmail } from "./emails/order-placed"
 import { renderContactFormEmail } from "./emails/contact-form"
+import { renderPaymentConfirmedEmail } from "./emails/payment-confirmed"
 
 type ResendOptions = {
   api_key: string
@@ -52,6 +53,11 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
       case "contact-form": {
         subject = `Нове повідомлення від ${templateData.name} — Just Sleep`
         html = await renderContactFormEmail(templateData)
+        break
+      }
+      case "payment-confirmed": {
+        subject = `Оплата підтверджена — замовлення #${templateData.order_number} | Just Sleep`
+        html = await renderPaymentConfirmedEmail(templateData)
         break
       }
       default:

@@ -100,7 +100,7 @@ function getDeliveryPriceLabel(data: OrderEmailData): string {
   return formatCurrency(data.delivery_price)
 }
 
-function OrderPlacedEmail({ data }: { data: OrderEmailData }) {
+function PaymentConfirmedEmail({ data }: { data: OrderEmailData }) {
   const deliveryLabel =
     DELIVERY_LABELS[data.delivery_method] || data.delivery_method
   const paymentLabel =
@@ -112,7 +112,7 @@ function OrderPlacedEmail({ data }: { data: OrderEmailData }) {
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{`Замовлення #${data.order_number} — Just Sleep`}</title>
+        <title>{`Оплата підтверджена — замовлення #${data.order_number} — Just Sleep`}</title>
       </Head>
       <Body
         style={{
@@ -168,7 +168,7 @@ function OrderPlacedEmail({ data }: { data: OrderEmailData }) {
                 fontFamily: FONT_FAMILY,
               }}
             >
-              Дякуємо за замовлення, {data.full_name}!
+              Оплату отримано, {data.full_name}!
             </Heading>
             <Text
               style={{
@@ -182,7 +182,7 @@ function OrderPlacedEmail({ data }: { data: OrderEmailData }) {
               <strong style={{ color: COLORS.accent }}>
                 #{data.order_number}
               </strong>{" "}
-              прийнято та обробляється.
+              успішно оплачене.
             </Text>
           </Section>
 
@@ -542,6 +542,6 @@ function OrderPlacedEmail({ data }: { data: OrderEmailData }) {
   )
 }
 
-export async function renderOrderPlacedEmail(data: any): Promise<string> {
-  return render(<OrderPlacedEmail data={data as OrderEmailData} />)
+export async function renderPaymentConfirmedEmail(data: any): Promise<string> {
+  return render(<PaymentConfirmedEmail data={data as OrderEmailData} />)
 }
