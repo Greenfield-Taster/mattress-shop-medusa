@@ -205,14 +205,14 @@ export async function POST(
 
     if (!customerId && body.contactData.createAccount) {
       try {
-        const normalizedPhone = normalizePhoneNumber(body.contactData.phone)
+        const customerPhone = normalizePhoneNumber(body.contactData.phone)
 
-        let customer = await customerService.findByPhone(normalizedPhone)
+        let customer = await customerService.findByPhone(customerPhone)
 
         if (!customer) {
           const nameParts = body.contactData.fullName.trim().split(" ")
           customer = await customerService.createCustomer({
-            phone: normalizedPhone,
+            phone: customerPhone,
             email: body.contactData.email,
             first_name: nameParts[0] || null,
             last_name: nameParts.slice(1).join(" ") || null,
@@ -281,8 +281,10 @@ export async function POST(
         promoDiscountValue = validation.promoCode.discount_value
         serverDiscount = promoCodeService.calculateDiscount(validation.promoCode, serverSubtotal)
 
-        // Інкрементуємо використання промокоду
-        await promoCodeService.incrementUsage(validation.promoCode.id)
+        // For card-online: defer promo code usage increment to webhook (after payment confirmed)
+        if (body.paymentMethod !== "card-online") {
+          await promoCodeService.incrementUsage(validation.promoCode.id)
+        }
       }
     }
 
@@ -350,7 +352,7 @@ export async function POST(
     const order = await orderService.createOrderWithItems(orderData, orderItems)
 
     // Build WayForPay payment data for card-online
-    let paymentData = null
+    let paymentData: any = null
     if (body.paymentMethod === "card-online") {
       try {
         const nameParts = (body.contactData.fullName || "").split(" ")

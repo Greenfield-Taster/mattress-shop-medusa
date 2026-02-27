@@ -234,6 +234,14 @@ const contactRateLimit = rateLimit({
   message: { error: "Забагато повідомлень. Спробуйте через 15 хвилин" },
 })
 
+const paymentInitiateRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Забагато спроб оплати. Спробуйте через 15 хвилин" },
+})
+
 // CORS налаштування для кастомних роутів
 const storeCorsOptions = {
   origin: process.env.STORE_CORS?.split(",") || ["http://localhost:5173"],
@@ -254,10 +262,15 @@ export default defineMiddlewares({
       middlewares: [cors(storeCorsOptions)],
     },
 
-    // ===== PAYMENT WEBHOOK =====
+    // ===== PAYMENT ROUTES =====
     {
       matcher: "/store/payments/webhook",
-      middlewares: [cors(storeCorsOptions)],
+      middlewares: [cors({ origin: true, methods: ["POST"] })],
+    },
+    {
+      method: "POST",
+      matcher: "/store/payments/initiate/*",
+      middlewares: [paymentInitiateRateLimit],
     },
 
     // ===== DELIVERY PROXY =====

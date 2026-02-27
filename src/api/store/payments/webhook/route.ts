@@ -5,6 +5,8 @@ import {
   buildWebhookResponse,
   type WebhookBody,
 } from "../../../../utils/wayforpay"
+import { PROMO_CODE_MODULE } from "../../../../modules/promo-code"
+import type PromoCodeModuleService from "../../../../modules/promo-code/service"
 
 export const AUTHENTICATE = false
 
@@ -69,10 +71,22 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const orderService = req.scope.resolve("shopOrderService") as any
 
     if (body.transactionStatus === "Approved") {
+      // Verify amount matches order total
+      const expectedAmountUAH = Math.round(orderData.total / 100)
+      if (body.amount !== expectedAmountUAH || body.currency !== "UAH") {
+        console.error(
+          "[wayforpay] Amount mismatch for order:",
+          body.orderReference,
+          "expected:", expectedAmountUAH, "UAH",
+          "got:", body.amount, body.currency
+        )
+        return res.json(buildWebhookResponse(body.orderReference))
+      }
+
       await orderService.updateOrders({
         id: orderData.id,
         payment_status: "paid",
-        transaction_id: body.orderReference,
+        transaction_id: body.authCode || body.orderReference,
       })
 
       // Send confirmation email
@@ -113,6 +127,19 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         console.error("[wayforpay] Error sending confirmation email:", emailError)
       }
 
+      // Increment promo code usage (deferred from order creation for card-online)
+      if (orderData.promo_code) {
+        try {
+          const promoCodeService = req.scope.resolve<PromoCodeModuleService>(PROMO_CODE_MODULE)
+          const validation = await promoCodeService.validatePromoCode(orderData.promo_code, 0)
+          if (validation.valid && validation.promoCode) {
+            await promoCodeService.incrementUsage(validation.promoCode.id)
+          }
+        } catch (promoError) {
+          console.error("[wayforpay] Error incrementing promo code usage:", promoError)
+        }
+      }
+
       console.log("[wayforpay] Payment approved for order:", body.orderReference)
     } else if (
       body.transactionStatus === "Declined" ||
@@ -121,7 +148,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       await orderService.updateOrders({
         id: orderData.id,
         payment_status: "failed",
-        transaction_id: body.orderReference,
+        transaction_id: body.authCode || body.orderReference,
       })
       console.log(
         "[wayforpay] Payment",

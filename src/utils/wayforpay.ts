@@ -1,8 +1,16 @@
 import crypto from "crypto"
 
-const MERCHANT_ACCOUNT = process.env.WAYFORPAY_MERCHANT_ACCOUNT || ""
-const MERCHANT_SECRET = process.env.WAYFORPAY_MERCHANT_SECRET || ""
-const MERCHANT_DOMAIN = process.env.WAYFORPAY_MERCHANT_DOMAIN || "just-sleep.com.ua"
+function getEnv(key: string, fallback?: string): string {
+  const val = process.env[key]
+  if (!val && fallback === undefined) {
+    throw new Error(`${key} environment variable is required`)
+  }
+  return val || fallback || ""
+}
+
+const MERCHANT_ACCOUNT = getEnv("WAYFORPAY_MERCHANT_ACCOUNT")
+const MERCHANT_SECRET = getEnv("WAYFORPAY_MERCHANT_SECRET")
+const MERCHANT_DOMAIN = getEnv("WAYFORPAY_MERCHANT_DOMAIN", "just-sleep.com.ua")
 
 interface PaymentDataParams {
   orderReference: string
