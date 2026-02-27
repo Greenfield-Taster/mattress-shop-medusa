@@ -254,6 +254,12 @@ export default defineMiddlewares({
       middlewares: [cors(storeCorsOptions)],
     },
 
+    // ===== PAYMENT WEBHOOK =====
+    {
+      matcher: "/store/payments/webhook",
+      middlewares: [cors(storeCorsOptions)],
+    },
+
     // ===== DELIVERY PROXY =====
     {
       matcher: "/store/delivery/*",
