@@ -114,6 +114,26 @@
           "nullable": true,
           "mappedType": "text"
         },
+        "delivery_price": {
+          "name": "delivery_price",
+          "type": "numeric",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "mappedType": "decimal"
+        },
+        "delivery_price_type": {
+          "name": "delivery_price_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'free'",
+          "mappedType": "text"
+        },
         "payment_method": {
           "name": "payment_method",
           "type": "text",
@@ -131,6 +151,15 @@
           "primary": false,
           "nullable": false,
           "default": "'pending'",
+          "mappedType": "text"
+        },
+        "transaction_id": {
+          "name": "transaction_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
           "mappedType": "text"
         },
         "company_name": {
@@ -243,6 +272,15 @@
           "primary": false,
           "nullable": true,
           "mappedType": "text"
+        },
+        "raw_delivery_price": {
+          "name": "raw_delivery_price",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "json"
         },
         "raw_subtotal": {
           "name": "raw_subtotal",

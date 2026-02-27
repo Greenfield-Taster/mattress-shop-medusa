@@ -95,6 +95,9 @@ export const Order = model
      */
     payment_status: model.text().default("pending"),
 
+    /** ID транзакції WayForPay (orderReference) */
+    transaction_id: model.text().nullable(),
+
     // ===== ДАНІ ДЛЯ ЮРИДИЧНИХ ОСІБ =====
 
     /** Назва компанії (для invoice) */
