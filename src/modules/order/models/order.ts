@@ -89,6 +89,7 @@ export const Order = model
     /**
      * Статус оплати:
      * - pending (очікує)
+     * - pending_payment (очікує оплати онлайн)
      * - paid (оплачено)
      * - failed (помилка)
      * - refunded (повернено)

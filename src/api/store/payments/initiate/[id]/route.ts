@@ -49,7 +49,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
     const productCounts = items.map((item: any) => item.quantity)
     const productPrices = items.map(
-      (item: any) => Math.round((item.unit_price * item.quantity) / 100)
+      (item: any) => Math.round(item.unit_price / 100)
     )
 
     // Total in UAH (not kopecks)

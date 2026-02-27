@@ -78,6 +78,7 @@ const ORDER_STATUSES = [
 
 const PAYMENT_STATUSES = [
   { value: "pending", label: "Очікує", color: "orange" as const },
+  { value: "pending_payment", label: "Очікує оплати", color: "orange" as const },
   { value: "paid", label: "Оплачено", color: "green" as const },
   { value: "failed", label: "Помилка", color: "red" as const },
   { value: "refunded", label: "Повернено", color: "grey" as const },
@@ -94,7 +95,7 @@ const DELIVERY_METHODS: Record<string, string> = {
 const PAYMENT_METHODS: Record<string, string> = {
   "cash-on-delivery": "При отриманні",
   "card-online": "Картка онлайн",
-  "google-apple-pay": "Google/Apple Pay",
+  "google-apple-pay": "Google/Apple Pay", // Legacy: kept for existing orders
   "invoice": "Рахунок",
 }
 

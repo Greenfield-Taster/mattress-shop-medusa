@@ -137,6 +137,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json(buildWebhookResponse(body.orderReference))
   } catch (error: any) {
     console.error("[wayforpay] Webhook error:", error)
-    return res.status(500).json({ error: "Internal error" })
+    // Return acknowledgment to stop retries, investigate error manually
+    const orderRef = (req.body as any)?.orderReference || "unknown"
+    return res.json(buildWebhookResponse(orderRef))
   }
 }

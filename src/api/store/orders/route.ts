@@ -51,11 +51,6 @@ interface CreateOrderBody {
   // Оплата
   paymentMethod: string
   paymentData?: {
-    // Для карткової оплати (не зберігаємо!)
-    cardNumber?: string
-    cardExpiry?: string
-    cardCvv?: string
-    cardHolder?: string
     // Для юридичних осіб
     companyName?: string
     edrpou?: string
@@ -367,7 +362,7 @@ export async function POST(
         )
         const productCounts = orderItems.map((item) => item.quantity)
         const productPrices = orderItems.map(
-          (item) => Math.round(item.total / 100)
+          (item) => Math.round(item.unit_price / 100)
         )
 
         const amountUAH = Math.round(serverTotal / 100)
