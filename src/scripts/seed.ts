@@ -73,9 +73,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
             currency_code: "uah",
             is_default: true,
           },
-          {
-            currency_code: "eur",
-          },
         ],
         default_sales_channel_id: defaultSalesChannel[0].id,
       },
@@ -370,7 +367,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info(`API Key: ${publishableApiKey.token || "(already created)"}`)
   logger.info("")
   logger.info("Next steps:")
-  logger.info("1. Seed mattresses: npx medusa exec ./src/scripts/seed-mattresses.ts")
-  logger.info("2. Start server: npm run dev")
-  logger.info("3. Open admin: http://localhost:9000/app")
+  logger.info("1. Start server: npm run dev")
+  logger.info("2. Open admin: http://localhost:9000/app")
+  logger.info("3. Add mattresses through the admin panel")
 }
