@@ -322,7 +322,6 @@ export function formatProductForStore(product: ProductWithAttributes): object {
     isNew: attrs?.is_new || false,
     discount: discountPercent,
     discountPercent: discountPercent,
-    inStock: true, // TODO: підключити до inventory
 
     // Опис
     descriptionMain: attrs?.description_main,
