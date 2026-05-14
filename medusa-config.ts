@@ -50,24 +50,27 @@ module.exports = defineConfig({
         ],
       },
     },
-    // Local File Provider - для development
-    // ВАЖЛИВО: MedusaJS обслуговує тільки /static директорію через Express.static
-    {
-      resolve: "@medusajs/medusa/file",
-      options: {
-        providers: [
+    // Local File Provider - тільки для development.
+    // В production (Medusa Cloud) провайдер не реєструється, щоб платформа
+    // підставила свій авто-провіжионований S3 bucket.
+    ...(process.env.NODE_ENV !== "production"
+      ? [
           {
-            resolve: "@medusajs/medusa/file-local",
-            id: "local",
+            resolve: "@medusajs/medusa/file",
             options: {
-              // Директорія для збереження файлів (static - обслуговується MedusaJS)
-              upload_dir: "static",
-              // URL бекенду для формування URL файлів (з /static на кінці)
-              backend_url: process.env.BACKEND_URL,
+              providers: [
+                {
+                  resolve: "@medusajs/medusa/file-local",
+                  id: "local",
+                  options: {
+                    upload_dir: "static",
+                    backend_url: process.env.BACKEND_URL,
+                  },
+                },
+              ],
             },
           },
-        ],
-      },
-    },
+        ]
+      : []),
   ],
 })
